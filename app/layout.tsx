@@ -6,20 +6,20 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Luca's Growing Journey",
-  description: 'Following the wonderful journey of growing up!',
+  title: "小朋友的成长记录",
+  description: "记录成长的每一个精彩瞬间",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <nav className="bg-white shadow-lg">
-          <div className="container mx-auto px-4">
+    <html lang="zh" data-theme="cupcake">
+      <body className={`${inter.className} min-h-screen bg-gradient-to-b from-primary-100 to-secondary-100`}>
+        <div className="container mx-auto px-4">
+          <nav className="bg-white shadow-lg">
             <div className="flex justify-between items-center h-16">
               <a href="/" className="text-2xl font-bold text-blue-600">
                 🦖 Luca
@@ -36,16 +36,16 @@ export default function RootLayout({
                 </a>
               </div>
             </div>
-          </div>
-        </nav>
-        
-        {children}
-        
-        <footer className="bg-gray-50 py-8 mt-16">
-          <div className="container mx-auto px-4 text-center text-gray-600">
-            <p>© 2024 Luca's Growing Journey. All rights reserved.</p>
-          </div>
-        </footer>
+          </nav>
+          
+          {children}
+          
+          <footer className="bg-gray-50 py-8 mt-16">
+            <div className="container mx-auto px-4 text-center text-gray-600">
+              <p>© 2024 Luca's Growing Journey. All rights reserved.</p>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );
