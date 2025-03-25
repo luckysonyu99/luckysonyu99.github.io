@@ -36,8 +36,11 @@ jobs:
       - name: Build
         run: npm run build
         
-      - name: Copy CNAME file
-        run: cp public/CNAME out/ || true
+      - name: List build output
+        run: ls -la out/
+        
+      - name: Check index.html
+        run: cat out/index.html || echo "index.html not found"
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
