@@ -29,15 +29,12 @@ module.exports = {
   },
   plugins: [require("daisyui")],
   daisyui: {
-    themes: [
-      {
-        cupcake: {
-          ...require("daisyui/src/theming/themes")["cupcake"],
-          primary: "#FF6B6B",
-          secondary: "#4ECDC4",
-          accent: "#FFD93D",
-        },
-      },
-    ],
+    themes: ["cupcake"],
+    styled: true,
+    themes: true,
+    base: true,
+    utils: true,
+    logs: true,
+    rtl: false,
   },
 } 
