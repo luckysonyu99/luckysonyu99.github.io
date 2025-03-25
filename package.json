@@ -2,7 +2,7 @@
   "name": "luca-is-growing",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://luca-is-growing.github.io",
+  "homepage": "https://luckysonyu99.github.io",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
