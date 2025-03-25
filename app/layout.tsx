@@ -1,9 +1,19 @@
 import React from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Noto_Sans_SC, Mochiy_Pop_One } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const notoSansSC = Noto_Sans_SC({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-noto-sans',
+});
+
+const mochiyPopOne = Mochiy_Pop_One({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-mochiy',
+});
 
 export const metadata: Metadata = {
   title: "小朋友的成长记录",
@@ -17,22 +27,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh" data-theme="cupcake">
-      <body className={`${inter.className} min-h-screen bg-gradient-to-b from-primary-100 to-secondary-100`}>
+      <body className={`${notoSansSC.variable} ${mochiyPopOne.variable} font-sans min-h-screen bg-gradient-to-b from-primary-100 to-secondary-100`}>
         <div className="container mx-auto px-4">
-          <nav className="bg-white shadow-lg">
-            <div className="flex justify-between items-center h-16">
-              <a href="/" className="text-2xl font-bold text-blue-600">
+          <nav className="bg-white/80 backdrop-blur-sm shadow-lg rounded-b-xl">
+            <div className="flex justify-between items-center h-16 px-6">
+              <a href="/" className="text-2xl font-bold text-primary-400 font-mochiy hover:text-primary-500 transition-colors">
                 🦖 Luca
               </a>
-              <div className="flex space-x-4">
-                <a href="/" className="text-gray-600 hover:text-blue-600">
-                  Home
+              <div className="flex space-x-6">
+                <a href="/" className="text-gray-600 hover:text-primary-400 transition-colors">
+                  首页
                 </a>
-                <a href="#milestones" className="text-gray-600 hover:text-blue-600">
-                  Milestones
+                <a href="#milestones" className="text-gray-600 hover:text-primary-400 transition-colors">
+                  里程碑
                 </a>
-                <a href="#gallery" className="text-gray-600 hover:text-blue-600">
-                  Gallery
+                <a href="#gallery" className="text-gray-600 hover:text-primary-400 transition-colors">
+                  相册
                 </a>
               </div>
             </div>
@@ -40,9 +50,9 @@ export default function RootLayout({
           
           {children}
           
-          <footer className="bg-gray-50 py-8 mt-16">
+          <footer className="bg-white/80 backdrop-blur-sm shadow-lg rounded-t-xl mt-16 py-8">
             <div className="container mx-auto px-4 text-center text-gray-600">
-              <p>© 2024 Luca's Growing Journey. All rights reserved.</p>
+              <p className="font-mochiy">© 2024 Luca's Growing Journey</p>
             </div>
           </footer>
         </div>

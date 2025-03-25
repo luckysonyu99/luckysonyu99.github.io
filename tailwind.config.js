@@ -25,6 +25,10 @@ module.exports = {
           600: '#0073E6',
         },
       },
+      fontFamily: {
+        sans: ['var(--font-noto-sans)'],
+        mochiy: ['var(--font-mochiy)'],
+      },
     },
   },
   plugins: [require("daisyui")],
