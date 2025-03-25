@@ -11,10 +11,10 @@ export default function Home() {
         transition={{ duration: 0.8 }}
         className="text-center"
       >
-        <h1 className="text-4xl md:text-5xl font-mochiy text-candy-pink mb-6 animate-float">
+        <h1 className="text-4xl md:text-5xl font-qingke text-candy-pink mb-6 animate-float tracking-wider">
           欢迎来到小朋友的成长乐园！
         </h1>
-        <p className="text-lg md:text-xl text-gray-600 mb-12">
+        <p className="text-xl md:text-2xl text-gray-600 mb-12 tracking-wide">
           在这里记录每一个精彩瞬间 
           <span className="inline-block animate-wiggle">🌟</span>
         </p>
@@ -28,8 +28,8 @@ export default function Home() {
           <div className="bg-candy-blue/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 animate-float">
             <span className="text-5xl">🦖</span>
           </div>
-          <h3 className="text-2xl font-mochiy text-candy-blue text-center mb-4">恐龙探险</h3>
-          <p className="text-gray-600 text-center">和小恐龙一起探索神奇的世界</p>
+          <h3 className="text-2xl font-qingke text-candy-blue text-center mb-4 tracking-wide">恐龙探险</h3>
+          <p className="text-lg text-gray-600 text-center tracking-wide">和小恐龙一起探索神奇的世界</p>
         </motion.div>
 
         <motion.div
@@ -39,8 +39,8 @@ export default function Home() {
           <div className="bg-candy-yellow/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 animate-float">
             <span className="text-5xl">🚗</span>
           </div>
-          <h3 className="text-2xl font-mochiy text-candy-orange text-center mb-4">汽车总动员</h3>
-          <p className="text-gray-600 text-center">驾驶着梦想的小车车出发啦</p>
+          <h3 className="text-2xl font-qingke text-candy-orange text-center mb-4 tracking-wide">汽车总动员</h3>
+          <p className="text-lg text-gray-600 text-center tracking-wide">驾驶着梦想的小车车出发啦</p>
         </motion.div>
 
         <motion.div
@@ -50,8 +50,8 @@ export default function Home() {
           <div className="bg-candy-purple/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 animate-float">
             <span className="text-5xl">🐕</span>
           </div>
-          <h3 className="text-2xl font-mochiy text-candy-purple text-center mb-4">汪汪队出动</h3>
-          <p className="text-gray-600 text-center">和可爱的狗狗们一起冒险吧</p>
+          <h3 className="text-2xl font-qingke text-candy-purple text-center mb-4 tracking-wide">汪汪队出动</h3>
+          <p className="text-lg text-gray-600 text-center tracking-wide">和可爱的狗狗们一起冒险吧</p>
         </motion.div>
       </div>
 

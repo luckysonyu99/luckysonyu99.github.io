@@ -42,8 +42,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-noto-sans)'],
-        mochiy: ['var(--font-mochiy)'],
+        kuaile: ['var(--font-kuaile)'],
+        qingke: ['var(--font-qingke)'],
       },
       animation: {
         'float': 'float 3s ease-in-out infinite',
