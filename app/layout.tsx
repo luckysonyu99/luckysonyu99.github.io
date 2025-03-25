@@ -16,7 +16,7 @@ const zcoolQingKe = ZCOOL_QingKe_HuangYou({
 });
 
 export const metadata: Metadata = {
-  title: "小朋友的成长记录",
+  title: "宥宥小朋友的成长记录",
   description: "记录成长的每一个精彩瞬间",
 };
 
