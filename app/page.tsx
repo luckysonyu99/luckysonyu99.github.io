@@ -12,7 +12,7 @@ export default function Home() {
         className="text-center"
       >
         <h1 className="text-4xl md:text-5xl font-qingke text-candy-pink mb-6 animate-float tracking-wider">
-          欢迎来到小朋友的成长乐园！
+          欢迎来到喻言小朋友的成长乐园！
         </h1>
         <p className="text-xl md:text-2xl text-gray-600 mb-12 tracking-wide">
           在这里记录每一个精彩瞬间 
