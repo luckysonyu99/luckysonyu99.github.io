@@ -61,8 +61,134 @@ jobs:
           npm install daisyui@latest
           npm ls tailwindcss postcss autoprefixer daisyui
 
+      - name: Setup project structure
+        run: |
+          mkdir -p app/lib
+          
+          echo "Creating app/lib/supabase.ts..."
+          cat > app/lib/supabase.ts << 'EOL'
+          import { createClient } from '@supabase/supabase-js';
+
+          if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
+          }
+
+          if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY');
+          }
+
+          export const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          );
+          EOL
+
+          echo "Creating app/lib/milestoneService.ts..."
+          cat > app/lib/milestoneService.ts << 'EOL'
+          import { supabase } from './supabase';
+
+          export interface Milestone {
+            id: string;
+            title: string;
+            description: string;
+            date: string;
+            category: '成长' | '学习' | '生活' | '有趣' | '其他';
+            emoji: string;
+            created_at?: string;
+          }
+
+          const getMilestones = async (): Promise<Milestone[]> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .select('*')
+              .order('date', { ascending: false });
+
+            if (error) {
+              console.error('Error fetching milestones:', error);
+              throw error;
+            }
+
+            return data || [];
+          };
+
+          const createMilestone = async (milestone: Omit<Milestone, 'id' | 'created_at'>): Promise<Milestone> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .insert([milestone])
+              .select()
+              .single();
+
+            if (error) {
+              console.error('Error creating milestone:', error);
+              throw error;
+            }
+
+            return data;
+          };
+
+          const updateMilestone = async (id: string, milestone: Partial<Milestone>): Promise<Milestone> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .update(milestone)
+              .eq('id', id)
+              .select()
+              .single();
+
+            if (error) {
+              console.error('Error updating milestone:', error);
+              throw error;
+            }
+
+            return data;
+          };
+
+          const deleteMilestone = async (id: string): Promise<void> => {
+            const { error } = await supabase
+              .from('milestones')
+              .delete()
+              .eq('id', id);
+
+            if (error) {
+              console.error('Error deleting milestone:', error);
+              throw error;
+            }
+          };
+
+          export const milestoneService = {
+            getMilestones,
+            createMilestone,
+            updateMilestone,
+            deleteMilestone
+          };
+          EOL
+
       - name: Build
-        run: npm run build
+        run: |
+          echo "Starting build..."
+          echo "NEXT_PUBLIC_SUPABASE_URL length: ${#NEXT_PUBLIC_SUPABASE_URL}"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY length: ${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+          echo "Node modules contents:"
+          ls -la node_modules
+          echo "Project structure:"
+          tree -L 3
+          npm run build
+          echo "Build completed"
+        
+      - name: Debug build output
+        if: always()
+        run: |
+          echo "Listing build directory contents:"
+          ls -la
+          echo "Listing .next directory contents:"
+          ls -la .next || echo "No .next directory"
+          echo "Listing out directory contents:"
+          ls -la out || echo "No out directory"
+          echo "Node version:"
+          node -v
+          echo "NPM version:"
+          npm -v
+          echo "Package versions:"
+          npm list tailwindcss postcss autoprefixer daisyui
 
       - name: Setup Pages
         id: pages
