@@ -52,18 +52,14 @@ jobs:
           fi
           echo "All required environment variables are set"
           
-      - name: Clean install dependencies
+      - name: Install dependencies
         run: |
-          echo "Cleaning previous installations..."
-          rm -rf node_modules
-          rm -f package-lock.json
-          
-          echo "Installing dependencies..."
           npm install
-          
-          echo "Installing dev dependencies..."
           npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+          npm install daisyui@latest
           
+      - name: Create config files
+        run: |
           echo "Creating Tailwind config..."
           cat > tailwind.config.js << 'EOL'
           /** @type {import('tailwindcss').Config} */
@@ -163,9 +159,6 @@ jobs:
           }
           EOL
           
-          echo "Listing installed packages..."
-          npm list
-        
       - name: Build
         run: |
           echo "Starting build..."
@@ -187,10 +180,8 @@ jobs:
           node -v
           echo "NPM version:"
           npm -v
-          echo "TailwindCSS config:"
-          cat tailwind.config.js
-          echo "PostCSS config:"
-          cat postcss.config.js
+          echo "Package versions:"
+          npm list tailwindcss postcss autoprefixer daisyui
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
