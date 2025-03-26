@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Milestone, milestoneService } from '@/lib/milestoneService';
+import { Milestone, milestoneService } from '../lib/milestoneService';
 
 export default function Milestones() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -47,56 +47,33 @@ export default function Milestones() {
         </p>
       </motion.div>
 
-      <div className="relative">
-        {/* 时间轴线 */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-candy-pink via-candy-blue to-candy-yellow rounded-full"></div>
-
-        <div className="space-y-12">
-          {milestones.map((milestone, index) => (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          {milestones.map((milestone) => (
             <motion.div
               key={milestone.id}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.2 }}
-              className={`flex items-center ${
-                index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
-              } gap-8`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6"
             >
-              {/* 时间点 */}
-              <div className={`w-1/2 ${index % 2 === 0 ? 'text-right' : 'text-left'}`}>
-                <div className={`p-6 ${
-                  index % 2 === 0 ? 'ml-auto' : 'mr-auto'
-                } max-w-md bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 transform hover:scale-105 transition-transform duration-300`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl">{milestone.emoji}</span>
-                    <h3 className="text-xl font-qingke text-candy-purple tracking-wide">
-                      {milestone.title}
-                    </h3>
+              <div className="flex items-start space-x-4">
+                <div className="text-4xl">{milestone.emoji}</div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-kuaile text-candy-purple">{milestone.title}</h3>
+                    <span className="text-sm text-gray-500">
+                      {new Date(milestone.date).toLocaleDateString()}
+                    </span>
                   </div>
-                  <time className="text-sm text-gray-500 mb-2 block">
-                    {new Date(milestone.date).toLocaleDateString('zh-CN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </time>
-                  <p className="text-gray-600 tracking-wide">
-                    {milestone.description}
-                  </p>
-                  <div className="mt-3">
-                    <span className="inline-block px-3 py-1 bg-candy-pink/10 text-candy-pink rounded-full text-sm">
+                  <p className="mt-2 text-gray-600">{milestone.description}</p>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-sm font-medium text-candy-purple bg-candy-purple/10 rounded-full">
                       {milestone.category}
                     </span>
                   </div>
                 </div>
               </div>
-
-              {/* 时间轴圆点 */}
-              <div className="relative flex items-center justify-center w-8">
-                <div className="w-4 h-4 bg-white rounded-full border-4 border-candy-pink z-10"></div>
-              </div>
-
-              <div className="w-1/2"></div>
             </motion.div>
           ))}
         </div>
