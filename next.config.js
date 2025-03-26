@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
   images: {
+    unoptimized: true,
     domains: ['localhost', process.env.NEXT_PUBLIC_SUPABASE_URL],
   },
   assetPrefix: '',
