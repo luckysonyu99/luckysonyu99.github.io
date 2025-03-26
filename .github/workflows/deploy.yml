@@ -61,6 +61,32 @@ jobs:
           npm install daisyui@latest
           npm ls tailwindcss postcss autoprefixer daisyui
 
+      - name: Setup Tailwind
+        run: |
+          echo "Creating postcss.config.js..."
+          cat > postcss.config.js << 'EOL'
+          module.exports = {
+            plugins: {
+              tailwindcss: {},
+              autoprefixer: {},
+            },
+          }
+          EOL
+
+          echo "Creating tailwind.config.js..."
+          cat > tailwind.config.js << 'EOL'
+          /** @type {import('tailwindcss').Config} */
+          module.exports = {
+            content: [
+              "./app/**/*.{js,ts,jsx,tsx,mdx}",
+            ],
+            theme: {
+              extend: {},
+            },
+            plugins: [require("daisyui")],
+          }
+          EOL
+
       - name: Setup project structure
         run: |
           mkdir -p app/lib
@@ -196,6 +222,20 @@ jobs:
             "exclude": ["node_modules"]
           }
           EOL
+
+      - name: Check configuration files
+        run: |
+          echo "Checking configuration files..."
+          for file in tsconfig.json postcss.config.js tailwind.config.js; do
+            if [ -f "$file" ]; then
+              echo "$file exists"
+              echo "Content of $file:"
+              cat "$file"
+            else
+              echo "Error: $file does not exist"
+              exit 1
+            fi
+          done
 
       - name: Build
         run: |
