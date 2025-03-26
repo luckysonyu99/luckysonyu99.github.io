@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+QingKe+HuangYou&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-kuaile: 'Comic Neue', cursive;
-  --font-qingke: 'Indie Flower', cursive;
+  --font-kuaile: 'ZCOOL KuaiLe', cursive;
+  --font-qingke: 'ZCOOL QingKe HuangYou', cursive;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -48,6 +48,14 @@ body {
   .input {
     @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-candy-pink focus:border-transparent;
   }
+  
+  .card-hover {
+    @apply hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-blue;
+  }
 }
 
 /* 自定义滚动条 */
@@ -74,11 +82,6 @@ body {
   @apply opacity-0 animate-[fadeIn_0.5s_ease-in-out_forwards];
 }
 
-/* 卡片悬停效果 */
-.card-hover {
-  @apply hover:shadow-xl hover:-translate-y-1;
-}
-
 /* 按钮动画 */
 .btn-animate {
   @apply transition-all duration-300 hover:scale-105 active:scale-95;
@@ -87,11 +90,6 @@ body {
 /* 图片加载动画 */
 .image-loading {
   @apply animate-pulse bg-gray-200;
-}
-
-/* 文字渐变效果 */
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-blue;
 }
 
 /* 玻璃卡片效果 */
