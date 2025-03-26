@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { getMilestone, updateMilestone, uploadMilestonePhoto } from '@/models/milestone';
+import { getMilestone, updateMilestone, uploadMilestonePhoto, deleteMilestonePhoto } from '@/models/milestone';
 import type { Milestone } from '@/models/milestone';
 import Image from 'next/image';
 
@@ -20,6 +20,8 @@ export default function EditMilestonePage({ params }: { params: { id: string } }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -64,12 +66,87 @@ export default function EditMilestonePage({ params }: { params: { id: string } }
     }
   };
 
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('无法创建画布'));
+            return;
+          }
+
+          // 计算新的尺寸，保持宽高比
+          let width = img.width;
+          let height = img.height;
+          const maxSize = 1200; // 最大尺寸
+          if (width > height && width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // 转换为文件
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error('无法压缩图片'));
+                return;
+              }
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            },
+            'image/jpeg',
+            0.8 // 压缩质量
+          );
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      const photoUrl = await uploadMilestonePhoto(file);
+      setIsUploading(true);
+      setUploadProgress(0);
+      setError(null);
+
+      // 压缩图片
+      const compressedFile = await compressImage(file);
+
+      // 模拟上传进度
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      const photoUrl = await uploadMilestonePhoto(compressedFile);
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
       if (photoUrl) {
         setFormData(prev => ({ ...prev, photo_url: photoUrl }));
       } else {
@@ -77,6 +154,25 @@ export default function EditMilestonePage({ params }: { params: { id: string } }
       }
     } catch (err) {
       setError('上传照片失败');
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    if (!formData.photo_url) return;
+
+    try {
+      const success = await deleteMilestonePhoto(formData.photo_url);
+      if (success) {
+        setFormData(prev => ({ ...prev, photo_url: '' }));
+      } else {
+        setError('删除照片失败');
+      }
+    } catch (err) {
+      setError('删除照片失败');
       console.error(err);
     }
   };
@@ -167,21 +263,46 @@ export default function EditMilestonePage({ params }: { params: { id: string } }
               照片 📸
             </label>
             {formData.photo_url && (
-              <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+              <div className="relative h-48 mb-4 rounded-lg overflow-hidden group">
                 <Image
                   src={formData.photo_url}
                   alt="里程碑照片"
                   fill
                   className="object-cover"
                 />
+                <button
+                  type="button"
+                  onClick={handlePhotoDelete}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  🗑️
+                </button>
               </div>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                disabled={isUploading}
+              />
+              {isUploading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+                  <div className="w-full max-w-xs">
+                    <div className="bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-pink-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-center text-sm text-gray-600 mt-2">
+                      上传中... {uploadProgress}%
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end space-x-4">

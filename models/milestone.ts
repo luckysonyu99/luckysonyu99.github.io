@@ -116,4 +116,22 @@ export async function uploadMilestonePhoto(file: File): Promise<string | null> {
     console.error('Error uploading photo:', error);
     return null;
   }
+}
+
+export async function deleteMilestonePhoto(photoUrl: string): Promise<boolean> {
+  try {
+    // 从 URL 中提取文件路径
+    const filePath = photoUrl.split('/').pop();
+    if (!filePath) return false;
+
+    const { error } = await supabase.storage
+      .from('photos')
+      .remove([`milestone-photos/${filePath}`]);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    return false;
+  }
 } 
