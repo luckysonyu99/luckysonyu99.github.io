@@ -1,10 +1,17 @@
-import { getMilestone } from '@/models/milestone';
+import { getMilestone, getMilestones } from '@/models/milestone';
 import EditMilestoneForm from './EditMilestoneForm';
 
 export async function generateStaticParams() {
-  // 由于这是管理页面，我们可以返回一个空数组
-  // 这意味着这个页面将不会在构建时生成
-  return [];
+  try {
+    const milestones = await getMilestones();
+    return milestones.map((milestone) => ({
+      id: milestone.id.toString(),
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    // 如果获取里程碑列表失败，返回一个空数组
+    return [];
+  }
 }
 
 export default async function EditMilestonePage({ params }: { params: { id: string } }) {
