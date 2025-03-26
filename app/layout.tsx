@@ -38,11 +38,11 @@ export default function RootLayout({
                 <a href="/" className="text-gray-600 hover:text-candy-blue transition-colors text-lg">
                   首页
                 </a>
-                <a href="#milestones" className="text-gray-600 hover:text-candy-yellow transition-colors text-lg">
+                <a href="/milestones" className="text-gray-600 hover:text-candy-yellow transition-colors text-lg">
                   里程碑
                 </a>
-                <a href="#gallery" className="text-gray-600 hover:text-candy-green transition-colors text-lg">
-                  相册
+                <a href="/admin/milestones" className="text-gray-600 hover:text-candy-green transition-colors text-lg">
+                  管理
                 </a>
               </div>
             </div>
