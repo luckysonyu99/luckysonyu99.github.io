@@ -44,7 +44,7 @@ export default function MilestonesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">成长里程碑</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">成长里程碑 🎯</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {milestones.map((milestone) => (
           <motion.div
@@ -54,12 +54,12 @@ export default function MilestonesPage() {
             transition={{ duration: 0.5 }}
             className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow"
           >
-            <h2 className="text-xl font-semibold mb-2">{milestone.title}</h2>
+            <h2 className="text-xl font-semibold mb-2">{milestone.title} ✨</h2>
             <p className="text-gray-600 mb-4">{milestone.description}</p>
             <div className="flex justify-between items-center text-sm text-gray-500">
-              <span>{new Date(milestone.milestone_date).toLocaleDateString()}</span>
+              <span>📅 {new Date(milestone.milestone_date).toLocaleDateString()}</span>
               <span className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full">
-                {milestone.category}
+                {milestone.category} 🎨
               </span>
             </div>
           </motion.div>
