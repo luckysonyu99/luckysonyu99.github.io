@@ -55,13 +55,106 @@ jobs:
       - name: Install dependencies
         run: |
           rm -rf node_modules package-lock.json
+          npm cache clean --force
           npm install
           npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
           npm install daisyui@latest
 
-      - name: Create config files
+      - name: Setup project structure
         run: |
-          echo "Creating Tailwind config..."
+          mkdir -p lib
+          
+          echo "Creating lib/supabase.ts..."
+          cat > lib/supabase.ts << 'EOL'
+          import { createClient } from '@supabase/supabase-js';
+
+          if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
+          }
+
+          if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY');
+          }
+
+          export const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          );
+          EOL
+
+          echo "Creating lib/milestoneService.ts..."
+          cat > lib/milestoneService.ts << 'EOL'
+          import { supabase } from './supabase';
+
+          export interface Milestone {
+            id: number;
+            title: string;
+            description: string;
+            date: string;
+            category: '成长' | '学习' | '生活' | '有趣' | '其他';
+            emoji: string;
+            created_at?: string;
+          }
+
+          export const getMilestones = async (): Promise<Milestone[]> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .select('*')
+              .order('date', { ascending: false });
+
+            if (error) {
+              console.error('Error fetching milestones:', error);
+              throw error;
+            }
+
+            return data || [];
+          };
+
+          export const createMilestone = async (milestone: Omit<Milestone, 'id' | 'created_at'>): Promise<Milestone> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .insert([milestone])
+              .select()
+              .single();
+
+            if (error) {
+              console.error('Error creating milestone:', error);
+              throw error;
+            }
+
+            return data;
+          };
+
+          export const updateMilestone = async (id: number, milestone: Partial<Milestone>): Promise<Milestone> => {
+            const { data, error } = await supabase
+              .from('milestones')
+              .update(milestone)
+              .eq('id', id)
+              .select()
+              .single();
+
+            if (error) {
+              console.error('Error updating milestone:', error);
+              throw error;
+            }
+
+            return data;
+          };
+
+          export const deleteMilestone = async (id: number): Promise<void> => {
+            const { error } = await supabase
+              .from('milestones')
+              .delete()
+              .eq('id', id);
+
+            if (error) {
+              console.error('Error deleting milestone:', error);
+              throw error;
+            }
+          };
+          EOL
+
+          echo "Creating tailwind.config.js..."
           cat > tailwind.config.js << 'EOL'
           /** @type {import('tailwindcss').Config} */
           module.exports = {
@@ -150,7 +243,7 @@ jobs:
           }
           EOL
           
-          echo "Creating PostCSS config..."
+          echo "Creating postcss.config.js..."
           cat > postcss.config.js << 'EOL'
           module.exports = {
             plugins: {
@@ -159,12 +252,16 @@ jobs:
             },
           }
           EOL
-          
+
       - name: Build
         run: |
           echo "Starting build..."
           echo "NEXT_PUBLIC_SUPABASE_URL length: ${#NEXT_PUBLIC_SUPABASE_URL}"
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY length: ${#NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+          echo "Node modules contents:"
+          ls -la node_modules
+          echo "Project structure:"
+          tree -L 2
           npm run build
           echo "Build completed"
         
