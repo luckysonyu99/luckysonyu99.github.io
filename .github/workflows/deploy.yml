@@ -52,10 +52,13 @@ jobs:
           fi
           echo "All required environment variables are set"
           
-      - name: Install dependencies
+      - name: Clean install dependencies
         run: |
+          rm -rf node_modules
+          rm -f package-lock.json
           npm install
-          npm install -D tailwindcss postcss autoprefixer
+          npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+          npx tailwindcss init -p
           npm list
         
       - name: Build
@@ -79,6 +82,8 @@ jobs:
           node -v
           echo "NPM version:"
           npm -v
+          echo "TailwindCSS version:"
+          npx tailwindcss --version || echo "TailwindCSS not found"
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
