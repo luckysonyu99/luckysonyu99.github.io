@@ -2,12 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import Navbar from '@/components/Navbar';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-});
+import { zcoolKuaile } from './fonts';
 
 export const metadata: Metadata = {
   title: 'Luca 的成长记录 🌱',
@@ -21,10 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
-      </head>
-      <body className={`${inter.className} font-kuaile`}>
+      <body className={zcoolKuaile.className}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
