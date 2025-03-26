@@ -58,8 +58,7 @@ jobs:
           npm install
           npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
           npm install daisyui@latest
-          npx tailwindcss init -p
-          
+
       - name: Create config files
         run: |
           echo "Creating Tailwind config..."
