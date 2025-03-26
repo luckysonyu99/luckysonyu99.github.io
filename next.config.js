@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/luckysonyu99.github.io',
   images: {
     unoptimized: true, // GitHub Pages 不支持 Next.js 的图片优化
   },
