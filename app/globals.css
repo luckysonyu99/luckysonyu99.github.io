@@ -3,16 +3,98 @@
 @tailwind utilities;
 
 :root {
+  --font-kuaile: 'ZCOOL KuaiLe', sans-serif;
+  --font-qingke: 'ZCOOL QingKe HuangYou', sans-serif;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 }
 
 body {
+  font-family: var(--font-kuaile);
+  background: linear-gradient(135deg, rgba(255, 105, 180, 0.05) 0%, rgba(135, 206, 235, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%);
+  min-height: 100vh;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgb(var(--background-end-rgb))
-  );
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-qingke;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-candy-pink text-white hover:bg-candy-purple;
+  }
+  
+  .btn-secondary {
+    @apply bg-candy-blue text-white hover:bg-candy-green;
+  }
+  
+  .card {
+    @apply bg-white/70 backdrop-blur-sm shadow-lg rounded-xl border border-white/20 p-6;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-candy-pink focus:border-transparent;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 105, 180, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 105, 180, 0.5);
+}
+
+/* 页面过渡动画 */
+.page-transition {
+  @apply animate-fade-in;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* 按钮动画 */
+.btn-animate {
+  @apply transition-all duration-300 hover:scale-105 active:scale-95;
+}
+
+/* 图片加载动画 */
+.image-loading {
+  @apply animate-pulse bg-gray-200;
+}
+
+/* 文字渐变效果 */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-purple;
+}
+
+/* 玻璃卡片效果 */
+.glass-card {
+  @apply bg-white/70 backdrop-blur-sm shadow-lg rounded-xl border border-white/20;
+}
+
+/* 输入框焦点效果 */
+.input-focus {
+  @apply focus:ring-2 focus:ring-candy-pink focus:border-transparent;
 } 
