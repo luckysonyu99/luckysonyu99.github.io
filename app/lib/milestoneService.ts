@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 export interface Milestone {
-  id: number;
+  id: string;
   title: string;
   description: string;
   date: string;
@@ -10,7 +10,7 @@ export interface Milestone {
   created_at?: string;
 }
 
-export const getMilestones = async (): Promise<Milestone[]> => {
+const getMilestones = async (): Promise<Milestone[]> => {
   const { data, error } = await supabase
     .from('milestones')
     .select('*')
@@ -24,7 +24,7 @@ export const getMilestones = async (): Promise<Milestone[]> => {
   return data || [];
 };
 
-export const createMilestone = async (milestone: Omit<Milestone, 'id' | 'created_at'>): Promise<Milestone> => {
+const createMilestone = async (milestone: Omit<Milestone, 'id' | 'created_at'>): Promise<Milestone> => {
   const { data, error } = await supabase
     .from('milestones')
     .insert([milestone])
@@ -39,7 +39,7 @@ export const createMilestone = async (milestone: Omit<Milestone, 'id' | 'created
   return data;
 };
 
-export const updateMilestone = async (id: number, milestone: Partial<Milestone>): Promise<Milestone> => {
+const updateMilestone = async (id: string, milestone: Partial<Milestone>): Promise<Milestone> => {
   const { data, error } = await supabase
     .from('milestones')
     .update(milestone)
@@ -55,7 +55,7 @@ export const updateMilestone = async (id: number, milestone: Partial<Milestone>)
   return data;
 };
 
-export const deleteMilestone = async (id: number): Promise<void> => {
+const deleteMilestone = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('milestones')
     .delete()
@@ -65,4 +65,11 @@ export const deleteMilestone = async (id: number): Promise<void> => {
     console.error('Error deleting milestone:', error);
     throw error;
   }
+};
+
+export const milestoneService = {
+  getMilestones,
+  createMilestone,
+  updateMilestone,
+  deleteMilestone
 }; 

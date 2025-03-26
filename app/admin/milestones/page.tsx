@@ -34,7 +34,7 @@ export default function MilestonesAdmin() {
 
   const handleAddMilestone = async () => {
     try {
-      await milestoneService.addMilestone(newMilestone);
+      await milestoneService.createMilestone(newMilestone);
       await fetchMilestones();
       setNewMilestone({
         date: '',
