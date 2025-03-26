@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: 'export',
+  basePath: '/luckysonyu99.github.io',
   images: {
     unoptimized: true, // GitHub Pages 不支持 Next.js 的图片优化
   },
-  basePath: '',
   assetPrefix: '',
   trailingSlash: true,  // 保留尾部斜杠
 }
