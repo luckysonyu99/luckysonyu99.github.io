@@ -54,7 +54,8 @@ jobs:
           
       - name: Install dependencies
         run: |
-          npm ci
+          npm install
+          npm install -D tailwindcss postcss autoprefixer
           npm list
         
       - name: Build
