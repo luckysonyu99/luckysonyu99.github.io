@@ -19,13 +19,6 @@ const config: Config = {
         'candy-purple': '#DDA0DD',
         'candy-green': '#98FB98',
       },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'fade-in-delay': 'fadeIn 0.5s ease-in-out 0.2s forwards',
-        'float': 'float 3s ease-in-out infinite',
-        'wiggle': 'wiggle 1s ease-in-out infinite',
-        'gradient': 'gradient 3s ease infinite',
-      },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
@@ -44,6 +37,11 @@ const config: Config = {
           '50%': { backgroundPosition: '100% 50%' },
           '100%': { backgroundPosition: '0% 50%' },
         },
+      },
+      animation: {
+        'float': 'float 3s ease-in-out infinite',
+        'wiggle': 'wiggle 1s ease-in-out infinite',
+        'gradient': 'gradient 3s ease infinite',
       },
     },
   },
