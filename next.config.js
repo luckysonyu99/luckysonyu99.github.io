@@ -4,8 +4,8 @@ const nextConfig = {
   images: {
     unoptimized: true, // GitHub Pages 不支持 Next.js 的图片优化
   },
-  basePath: '',
-  assetPrefix: '',
+  basePath: '/luckysonyu99.github.io',
+  assetPrefix: '/luckysonyu99.github.io/',
   trailingSlash: true,  // 保留尾部斜杠
 }
 
