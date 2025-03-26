@@ -11,6 +11,7 @@ export interface Milestone {
   description: string;
   milestone_date: string;
   category: string;
+  photo_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -75,5 +76,44 @@ export async function deleteMilestone(id: number): Promise<boolean> {
   } catch (error) {
     console.error('Error deleting milestone:', error);
     return false;
+  }
+}
+
+export async function getMilestone(id: number): Promise<Milestone | null> {
+  try {
+    const { data, error } = await supabase
+      .from('milestones')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching milestone:', error);
+    return null;
+  }
+}
+
+export async function uploadMilestonePhoto(file: File): Promise<string | null> {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `milestone-photos/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('photos')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('photos')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    return null;
   }
 } 
