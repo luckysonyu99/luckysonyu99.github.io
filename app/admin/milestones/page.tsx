@@ -1,20 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Milestone, milestoneService } from '@/lib/milestoneService';
+import { useSession } from 'next-auth/react';
+import { Milestone, getMilestones, createMilestone, updateMilestone, deleteMilestone } from '@/models/milestone';
 
-const categories = ['成长', '学习', '生活', '有趣', '其他'] as const;
-const emojis = ['👶', '🔄', '😊', '🎯', '🎨', '🎵', '🎮', '📚', '🍼', '🦁', '🌟', '💫'];
-
-export default function MilestonesAdmin() {
+export default function MilestonesAdminPage() {
+  const { data: session } = useSession();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newMilestone, setNewMilestone] = useState<Omit<Milestone, 'id' | 'created_at'>>({
-    date: '',
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentMilestone, setCurrentMilestone] = useState<Partial<Milestone>>({
     title: '',
     description: '',
-    category: '成长',
-    emoji: '👶',
+    milestone_date: '',
+    category: ''
   });
 
   useEffect(() => {
@@ -23,7 +21,7 @@ export default function MilestonesAdmin() {
 
   const fetchMilestones = async () => {
     try {
-      const data = await milestoneService.getMilestones();
+      const data = await getMilestones();
       setMilestones(data);
     } catch (error) {
       console.error('Error fetching milestones:', error);
@@ -32,164 +30,163 @@ export default function MilestonesAdmin() {
     }
   };
 
-  const handleAddMilestone = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await milestoneService.createMilestone(newMilestone);
-      await fetchMilestones();
-      setNewMilestone({
-        date: '',
+      if (isEditing && currentMilestone.id) {
+        await updateMilestone(currentMilestone.id, currentMilestone);
+      } else {
+        await createMilestone(currentMilestone as Omit<Milestone, 'id' | 'created_at' | 'updated_at'>);
+      }
+      setCurrentMilestone({
         title: '',
         description: '',
-        category: '成长',
-        emoji: '👶',
+        milestone_date: '',
+        category: ''
       });
+      setIsEditing(false);
+      fetchMilestones();
     } catch (error) {
-      console.error('Error adding milestone:', error);
+      console.error('Error saving milestone:', error);
     }
   };
 
-  const handleDeleteMilestone = async (id: string) => {
-    try {
-      await milestoneService.deleteMilestone(id);
-      await fetchMilestones();
-    } catch (error) {
-      console.error('Error deleting milestone:', error);
+  const handleEdit = (milestone: Milestone) => {
+    setCurrentMilestone(milestone);
+    setIsEditing(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('确定要删除这个里程碑吗？')) {
+      try {
+        await deleteMilestone(id);
+        fetchMilestones();
+      } catch (error) {
+        console.error('Error deleting milestone:', error);
+      }
     }
   };
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl text-gray-600 mb-4">请先登录</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-bounce text-4xl">⚙️</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
       </div>
     );
   }
 
   return (
-    <div className="py-12 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-12"
-      >
-        <h1 className="text-4xl md:text-5xl font-qingke text-candy-purple mb-6 animate-float tracking-wider">
-          里程碑管理 
-          <span className="inline-block animate-wiggle ml-2">⚙️</span>
-        </h1>
-      </motion.div>
+    <main className="min-h-screen py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">里程碑管理</h1>
 
-      {/* 添加新里程碑表单 */}
-      <div className="max-w-2xl mx-auto bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 mb-8">
-        <h2 className="text-2xl font-qingke text-candy-blue mb-6">添加新里程碑</h2>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">日期</label>
+              <label className="block text-sm font-medium text-gray-700">标题</label>
               <input
-                type="date"
-                value={newMilestone.date}
-                onChange={(e) => setNewMilestone({ ...newMilestone, date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-candy-pink focus:border-candy-pink"
+                type="text"
+                value={currentMilestone.title}
+                onChange={(e) => setCurrentMilestone({ ...currentMilestone, title: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">类别</label>
-              <select
-                value={newMilestone.category}
-                onChange={(e) => setNewMilestone({ ...newMilestone, category: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-candy-pink focus:border-candy-pink"
+              <label className="block text-sm font-medium text-gray-700">日期</label>
+              <input
+                type="date"
+                value={currentMilestone.milestone_date}
+                onChange={(e) => setCurrentMilestone({ ...currentMilestone, milestone_date: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">类别</label>
+              <input
+                type="text"
+                value={currentMilestone.category}
+                onChange={(e) => setCurrentMilestone({ ...currentMilestone, category: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">描述</label>
+              <textarea
+                value={currentMilestone.description}
+                onChange={(e) => setCurrentMilestone({ ...currentMilestone, description: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                rows={3}
+                required
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end space-x-4">
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setCurrentMilestone({
+                    title: '',
+                    description: '',
+                    milestone_date: '',
+                    category: ''
+                  });
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+                取消
+              </button>
+            )}
+            <button
+              type="submit"
+              className="px-4 py-2 bg-candy-pink text-white rounded-md hover:bg-candy-pink/90"
+            >
+              {isEditing ? '更新' : '添加'}
+            </button>
           </div>
+        </form>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">标题</label>
-            <input
-              type="text"
-              value={newMilestone.title}
-              onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-candy-pink focus:border-candy-pink"
-              placeholder="输入里程碑标题"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
-            <textarea
-              value={newMilestone.description}
-              onChange={(e) => setNewMilestone({ ...newMilestone, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-candy-pink focus:border-candy-pink"
-              rows={3}
-              placeholder="输入里程碑描述"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">表情</label>
-            <div className="grid grid-cols-6 gap-2">
-              {emojis.map((emoji) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {milestones.map((milestone) => (
+            <div key={milestone.id} className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{milestone.title}</h3>
+              <p className="text-gray-600 mb-4">{milestone.description}</p>
+              <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                <span>{milestone.category}</span>
+                <span>{new Date(milestone.milestone_date).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-end space-x-4">
                 <button
-                  key={emoji}
-                  onClick={() => setNewMilestone({ ...newMilestone, emoji })}
-                  className={`text-2xl p-2 rounded-lg hover:bg-gray-100 ${
-                    newMilestone.emoji === emoji ? 'bg-candy-pink/10 ring-2 ring-candy-pink' : ''
-                  }`}
+                  onClick={() => handleEdit(milestone)}
+                  className="text-candy-blue hover:text-candy-blue/80"
                 >
-                  {emoji}
+                  编辑
                 </button>
-              ))}
+                <button
+                  onClick={() => handleDelete(milestone.id)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  删除
+                </button>
+              </div>
             </div>
-          </div>
-
-          <button
-            onClick={handleAddMilestone}
-            className="w-full bg-gradient-to-r from-candy-pink to-candy-purple text-white font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity"
-          >
-            添加里程碑
-          </button>
+          ))}
         </div>
       </div>
-
-      {/* 里程碑列表 */}
-      <div className="max-w-2xl mx-auto space-y-4">
-        {milestones.map((milestone) => (
-          <motion.div
-            key={milestone.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{milestone.emoji}</span>
-                <h3 className="text-xl font-qingke text-candy-purple">{milestone.title}</h3>
-              </div>
-              <button
-                onClick={() => handleDeleteMilestone(milestone.id)}
-                className="text-candy-pink hover:text-red-500 transition-colors"
-              >
-                删除
-              </button>
-            </div>
-            <time className="text-sm text-gray-500 block mb-2">
-              {new Date(milestone.date).toLocaleDateString('zh-CN', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </time>
-            <p className="text-gray-600 mb-3">{milestone.description}</p>
-            <span className="inline-block px-3 py-1 bg-candy-pink/10 text-candy-pink rounded-full text-sm">
-              {milestone.category}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+    </main>
   );
 } 

@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: 'standalone',
   images: {
-    unoptimized: true, // GitHub Pages 不支持 Next.js 的图片优化
+    domains: ['localhost', process.env.NEXT_PUBLIC_SUPABASE_URL],
   },
   assetPrefix: '',
   trailingSlash: true,  // 保留尾部斜杠

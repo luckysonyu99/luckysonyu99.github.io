@@ -10,10 +10,9 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // 如果用户未登录且访问的是管理页面，重定向到登录页
+  // 如果用户未登录且访问管理员路由，重定向到登录页面
   if (!session && req.nextUrl.pathname.startsWith('/admin')) {
-    const redirectUrl = new URL('/auth/signin', req.url);
-    return NextResponse.redirect(redirectUrl);
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
   return res;
