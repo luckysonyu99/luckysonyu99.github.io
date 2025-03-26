@@ -1,7 +1,7 @@
-import localFont from 'next/font/local';
+import { Inter } from 'next/font/google';
 
-export const zcoolKuaile = localFont({
-  src: '../public/fonts/ZCOOLKuaiLe-Regular.ttf',
+export const inter = Inter({
+  subsets: ['latin'],
   display: 'swap',
-  variable: '--font-zcool-kuaile',
+  variable: '--font-inter',
 }); 

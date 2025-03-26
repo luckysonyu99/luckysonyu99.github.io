@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import Navbar from '@/components/Navbar';
-import { zcoolKuaile } from './fonts';
+import { inter } from './fonts';
 
 export const metadata: Metadata = {
   title: 'Luca 的成长记录 🌱',
@@ -16,7 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <body className={zcoolKuaile.className}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+      </head>
+      <body className={`${inter.className} font-kuaile`}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
