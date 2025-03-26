@@ -1,19 +1,18 @@
 import React from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import localFont from 'next/font/local';
+import { Inter, ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Link from 'next/link';
 
 const inter = Inter({ subsets: ['latin'] });
-
-const kuaile = localFont({
-  src: '../public/fonts/ZCOOLKuaiLe-Regular.ttf',
+const kuaile = ZCOOL_KuaiLe({ 
+  weight: '400',
+  subsets: ['latin'],
   variable: '--font-kuaile',
 });
-
-const qingke = localFont({
-  src: '../public/fonts/ZCOOLQingKeHuangYou-Regular.ttf',
+const qingke = ZCOOL_QingKe_HuangYou({ 
+  weight: '400',
+  subsets: ['latin'],
   variable: '--font-qingke',
 });
 
