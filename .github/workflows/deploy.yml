@@ -54,9 +54,11 @@ jobs:
           
       - name: Install dependencies
         run: |
+          rm -rf node_modules package-lock.json
           npm install
           npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
           npm install daisyui@latest
+          npx tailwindcss init -p
           
       - name: Create config files
         run: |

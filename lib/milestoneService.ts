@@ -5,6 +5,8 @@ export interface Milestone {
   title: string;
   description: string;
   date: string;
+  category: '成长' | '学习' | '生活' | '有趣' | '其他';
+  emoji: string;
   created_at?: string;
 }
 
