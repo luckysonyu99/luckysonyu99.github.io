@@ -54,12 +54,34 @@ jobs:
           
       - name: Install dependencies
         run: |
-          rm -rf node_modules package-lock.json
-          npm cache clean --force
+          echo "Installing dependencies..."
           npm install
-          npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
-          npm install daisyui@latest
-          npm ls tailwindcss postcss autoprefixer daisyui
+          npm install -g pnpm
+          pnpm install
+          pnpm add -D tailwindcss@latest postcss@latest autoprefixer@latest
+          pnpm add daisyui@latest
+          
+          echo "Verifying installations..."
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "PNPM version: $(pnpm -v)"
+          
+          echo "Installed packages:"
+          pnpm list tailwindcss postcss autoprefixer daisyui
+          
+          echo "Creating next.config.js..."
+          cat > next.config.js << 'EOL'
+          /** @type {import('next').NextConfig} */
+          const nextConfig = {
+            output: 'export',
+            images: {
+              unoptimized: true,
+            },
+            basePath: process.env.NODE_ENV === 'production' ? '/luckysonyu99.github.io' : '',
+          }
+          
+          module.exports = nextConfig
+          EOL
 
       - name: Setup Tailwind
         run: |
@@ -67,8 +89,8 @@ jobs:
           cat > postcss.config.js << 'EOL'
           module.exports = {
             plugins: {
-              tailwindcss: {},
-              autoprefixer: {},
+              'tailwindcss': {},
+              'autoprefixer': {},
             },
           }
           EOL
@@ -79,9 +101,22 @@ jobs:
           module.exports = {
             content: [
               "./app/**/*.{js,ts,jsx,tsx,mdx}",
+              "./components/**/*.{js,ts,jsx,tsx,mdx}",
             ],
             theme: {
-              extend: {},
+              extend: {
+                fontFamily: {
+                  kuaile: ['var(--font-kuaile)'],
+                  qingke: ['var(--font-qingke)'],
+                },
+                colors: {
+                  'candy-pink': '#FF69B4',
+                  'candy-blue': '#87CEEB',
+                  'candy-yellow': '#FFD700',
+                  'candy-green': '#98FB98',
+                  'candy-purple': '#DDA0DD',
+                },
+              },
             },
             plugins: [require("daisyui")],
           }

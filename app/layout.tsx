@@ -7,12 +7,14 @@ const zcoolKuaiLe = ZCOOL_KuaiLe({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-kuaile',
+  display: 'swap',
 });
 
 const zcoolQingKe = ZCOOL_QingKe_HuangYou({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-qingke',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -26,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh" data-theme="mytheme">
-      <body className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable} font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5`}>
+    <html lang="zh" data-theme="mytheme" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
+      <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
         <div className="container mx-auto px-4">
           <nav className="bg-white/70 backdrop-blur-sm shadow-lg rounded-b-2xl border border-white/20">
             <div className="flex justify-between items-center h-16 px-6">
