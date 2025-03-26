@@ -59,13 +59,14 @@ jobs:
           npm install
           npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
           npm install daisyui@latest
+          npm ls tailwindcss postcss autoprefixer daisyui
 
       - name: Setup project structure
         run: |
-          mkdir -p lib
+          mkdir -p app/lib
           
-          echo "Creating lib/supabase.ts..."
-          cat > lib/supabase.ts << 'EOL'
+          echo "Creating app/lib/supabase.ts..."
+          cat > app/lib/supabase.ts << 'EOL'
           import { createClient } from '@supabase/supabase-js';
 
           if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -82,8 +83,8 @@ jobs:
           );
           EOL
 
-          echo "Creating lib/milestoneService.ts..."
-          cat > lib/milestoneService.ts << 'EOL'
+          echo "Creating app/lib/milestoneService.ts..."
+          cat > app/lib/milestoneService.ts << 'EOL'
           import { supabase } from './supabase';
 
           export interface Milestone {
@@ -152,6 +153,39 @@ jobs:
               throw error;
             }
           };
+          EOL
+
+          echo "Creating tsconfig.json..."
+          cat > tsconfig.json << 'EOL'
+          {
+            "compilerOptions": {
+              "target": "es5",
+              "lib": ["dom", "dom.iterable", "esnext"],
+              "allowJs": true,
+              "skipLibCheck": true,
+              "strict": true,
+              "forceConsistentCasingInFileNames": true,
+              "noEmit": true,
+              "esModuleInterop": true,
+              "module": "esnext",
+              "moduleResolution": "bundler",
+              "resolveJsonModule": true,
+              "isolatedModules": true,
+              "jsx": "preserve",
+              "incremental": true,
+              "plugins": [
+                {
+                  "name": "next"
+                }
+              ],
+              "paths": {
+                "@/*": ["./app/*"]
+              },
+              "baseUrl": "."
+            },
+            "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+            "exclude": ["node_modules"]
+          }
           EOL
 
           echo "Creating tailwind.config.js..."
@@ -261,7 +295,7 @@ jobs:
           echo "Node modules contents:"
           ls -la node_modules
           echo "Project structure:"
-          tree -L 2
+          tree -L 3
           npm run build
           echo "Build completed"
         
