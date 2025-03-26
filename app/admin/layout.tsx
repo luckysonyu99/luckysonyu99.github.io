@@ -2,6 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 const menuItems = [
   {
@@ -33,6 +34,10 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
 
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/' });
+  };
+
   return (
     <div className="flex min-h-screen">
       {/* 侧边栏 */}
@@ -60,6 +65,16 @@ export default function AdminLayout({
               );
             })}
           </nav>
+
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors w-full"
+            >
+              <span className="text-xl">👋</span>
+              <span className="font-medium">退出登录</span>
+            </button>
+          </div>
         </div>
       </div>
 
