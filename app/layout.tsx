@@ -1,11 +1,23 @@
 import React from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const zcoolKuaiLe = ZCOOL_KuaiLe({ 
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-kuaile',
+  display: 'swap',
+});
+
+const zcoolQingKe = ZCOOL_QingKe_HuangYou({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-qingke',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: '宥宥小朋友的成长记录',
@@ -18,14 +30,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh">
-      <body className={inter.className}>
-        <nav className="bg-white shadow-md">
+    <html lang="zh" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
+      <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
+        <nav className="bg-white/70 backdrop-blur-sm shadow-lg rounded-b-2xl border border-white/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
-                  <Link href="/" className="text-2xl font-qingke text-candy-pink">
+                  <Link href="/" className="text-2xl font-qingke text-candy-pink hover:text-candy-purple transition-colors">
                     🌟 宥宥的成长乐园
                   </Link>
                 </div>
@@ -61,12 +73,10 @@ export default function RootLayout({
             </div>
           </div>
         </nav>
-        <main>{children}</main>
-        <footer className="bg-white border-t">
-          <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} 宥宥的成长乐园. All rights reserved.
-            </p>
+        <main className="container mx-auto px-4 py-8">{children}</main>
+        <footer className="bg-white/70 backdrop-blur-sm shadow-lg rounded-t-2xl border border-white/20 mt-16 py-8">
+          <div className="container mx-auto px-4 text-center">
+            <p className="font-qingke text-candy-purple">© {new Date().getFullYear()} 宥宥的成长乐园. All rights reserved.</p>
           </div>
         </footer>
       </body>
