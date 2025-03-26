@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { Quicksand } from 'next/font/google';
+import { Comic_Neue } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import Navbar from '@/components/Navbar';
 
-const quicksand = Quicksand({ 
+const comicNeue = Comic_Neue({ 
+  weight: ['300', '400', '700'],
   subsets: ['latin'],
   display: 'swap',
 });
@@ -21,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <body className={quicksand.className}>
+      <body className={comicNeue.className}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -35,7 +36,7 @@ export default function RootLayout({
                     Made with 💖 for Luca
                   </p>
                   <p className="text-gray-400 text-xs mt-2">
-                    © {new Date().getFullYear()} All rights reserved 🌟
+                    © 2022-2025 Luca's Growing Journey 🌟
                   </p>
                 </div>
               </div>
