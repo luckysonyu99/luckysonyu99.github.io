@@ -1,12 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/components/AuthProvider';
 import { Milestone, getMilestones, createMilestone, updateMilestone, deleteMilestone } from '@/models/milestone';
 
 export default function MilestonesAdminPage() {
-  const { data: session } = useSession();
+  const { user, loading } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentMilestone, setCurrentMilestone] = useState<Partial<Milestone>>({
     title: '',
@@ -16,8 +15,10 @@ export default function MilestonesAdminPage() {
   });
 
   useEffect(() => {
-    fetchMilestones();
-  }, []);
+    if (!loading && user) {
+      fetchMilestones();
+    }
+  }, [loading, user]);
 
   const fetchMilestones = async () => {
     try {
@@ -25,8 +26,6 @@ export default function MilestonesAdminPage() {
       setMilestones(data);
     } catch (error) {
       console.error('Error fetching milestones:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -67,7 +66,7 @@ export default function MilestonesAdminPage() {
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

@@ -1,12 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/components/AuthProvider';
 import { Photo, getPhotos, uploadPhoto, createPhoto, updatePhoto, deletePhoto } from '@/models/gallery';
 
 export default function GalleryAdminPage() {
-  const { data: session } = useSession();
+  const { user, loading } = useAuth();
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentPhoto, setCurrentPhoto] = useState<Partial<Photo>>({
@@ -17,8 +16,10 @@ export default function GalleryAdminPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchPhotos();
-  }, []);
+    if (!loading && user) {
+      fetchPhotos();
+    }
+  }, [loading, user]);
 
   const fetchPhotos = async () => {
     try {
@@ -27,8 +28,6 @@ export default function GalleryAdminPage() {
     } catch (err) {
       setError('获取照片失败');
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -87,7 +86,7 @@ export default function GalleryAdminPage() {
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

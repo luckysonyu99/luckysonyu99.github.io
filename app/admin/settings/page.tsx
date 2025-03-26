@@ -1,77 +1,61 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
-import { useSession } from 'next-auth/react';
-
-interface Settings {
-  site_title: string;
-  site_description: string;
-  baby_name: string;
-  baby_birthday: string;
-}
+import { useAuth } from '@/components/AuthProvider';
+import { getSettings, updateSettings, type Settings } from '@/models/settings';
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
-  const [settings, setSettings] = useState<Settings>({
+  const { user, loading } = useAuth();
+  const [settings, setSettings] = useState<Partial<Settings>>({
     site_title: '',
     site_description: '',
     baby_name: '',
     baby_birthday: '',
+    theme_color: 'pink',
+    email_notifications: false,
+    browser_notifications: false,
+    public_milestones: true,
+    public_photos: true
   });
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    if (!loading && user) {
+      fetchSettings();
+    }
+  }, [loading, user]);
 
   const fetchSettings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('*')
-        .single();
-
-      if (error) throw error;
+      const data = await getSettings();
       if (data) {
         setSettings(data);
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError('获取设置失败');
+      console.error(err);
     }
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+
     try {
-      setSaving(true);
-      setMessage(null);
-
-      const { error } = await supabase
-        .from('settings')
-        .upsert(settings);
-
-      if (error) throw error;
-
-      setMessage({
-        type: 'success',
-        text: '设置已保存',
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({
-        type: 'error',
-        text: '保存设置时出错',
-      });
+      await updateSettings(settings);
+      setSuccess(true);
+    } catch (err) {
+      setError('保存设置失败');
+      console.error(err);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -83,8 +67,8 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-bounce text-4xl">⚙️</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
       </div>
     );
   }
@@ -92,54 +76,72 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">设置</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">网站设置</h1>
 
-        <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
-          {/* 基本设置 */}
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">基本设置</h2>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">网站标题</label>
-                <input
-                  type="text"
-                  value={settings.site_title}
-                  onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
-                  placeholder="输入网站标题"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">网站描述</label>
-                <textarea
-                  value={settings.site_description}
-                  onChange={(e) => setSettings({ ...settings, site_description: e.target.value })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
-                  rows={3}
-                  placeholder="输入网站描述"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">主题颜色</label>
-                <select className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink">
-                  <option value="pink">粉色</option>
-                  <option value="blue">蓝色</option>
-                  <option value="purple">紫色</option>
-                </select>
-              </div>
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">网站标题</label>
+              <input
+                type="text"
+                value={settings.site_title}
+                onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                required
+              />
             </div>
-          </div>
 
-          {/* 通知设置 */}
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">通知设置</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">网站描述</label>
+              <textarea
+                value={settings.site_description}
+                onChange={(e) => setSettings({ ...settings, site_description: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                rows={3}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">宝宝名字</label>
+              <input
+                type="text"
+                value={settings.baby_name || ''}
+                onChange={(e) => setSettings({ ...settings, baby_name: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">宝宝生日</label>
+              <input
+                type="date"
+                value={settings.baby_birthday || ''}
+                onChange={(e) => setSettings({ ...settings, baby_birthday: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">主题颜色</label>
+              <select
+                value={settings.theme_color}
+                onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+              >
+                <option value="pink">粉色</option>
+                <option value="blue">蓝色</option>
+                <option value="purple">紫色</option>
+              </select>
+            </div>
+
             <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 text-candy-pink focus:ring-candy-pink border-gray-300 rounded"
+                  checked={settings.email_notifications}
+                  onChange={(e) => setSettings({ ...settings, email_notifications: e.target.checked })}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-900">
                   启用邮件通知
@@ -149,23 +151,21 @@ export default function SettingsPage() {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 text-candy-pink focus:ring-candy-pink border-gray-300 rounded"
+                  checked={settings.browser_notifications}
+                  onChange={(e) => setSettings({ ...settings, browser_notifications: e.target.checked })}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-900">
                   启用浏览器通知
                 </label>
               </div>
-            </div>
-          </div>
 
-          {/* 隐私设置 */}
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">隐私设置</h2>
-            <div className="space-y-4">
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 text-candy-pink focus:ring-candy-pink border-gray-300 rounded"
+                  checked={settings.public_milestones}
+                  onChange={(e) => setSettings({ ...settings, public_milestones: e.target.checked })}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-900">
                   公开显示里程碑
@@ -175,7 +175,9 @@ export default function SettingsPage() {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 text-candy-pink focus:ring-candy-pink border-gray-300 rounded"
+                  checked={settings.public_photos}
+                  onChange={(e) => setSettings({ ...settings, public_photos: e.target.checked })}
+                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-900">
                   公开显示相册
@@ -184,18 +186,24 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* 保存按钮 */}
-          <div className="px-6 py-4 bg-gray-50 text-right rounded-b-lg">
+          {error && (
+            <div className="mt-4 text-red-600 text-sm">{error}</div>
+          )}
+
+          {success && (
+            <div className="mt-4 text-green-600 text-sm">设置已保存</div>
+          )}
+
+          <div className="mt-6">
             <button
-              type="button"
-              onClick={handleSave}
+              type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-candy-pink text-white rounded-md hover:bg-candy-pink/90"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50"
             >
               {saving ? '保存中...' : '保存设置'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </main>
   );
