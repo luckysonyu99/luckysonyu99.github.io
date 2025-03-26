@@ -19,8 +19,8 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-pink-600">
-                宝宝成长记录
+              <Link href="/" className="text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
+                Luca 🌸
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -32,7 +32,7 @@ export default function Navbar() {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                首页
+                首页 🏠
               </Link>
               <Link
                 href="/milestones"
@@ -42,7 +42,7 @@ export default function Navbar() {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                里程碑
+                里程碑 🎯
               </Link>
               <Link
                 href="/gallery"
@@ -52,7 +52,7 @@ export default function Navbar() {
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                相册
+                相册 📸
               </Link>
             </div>
           </div>
@@ -68,23 +68,23 @@ export default function Navbar() {
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                     }`}
                   >
-                    管理面板
+                    管理面板 ⚙️
                   </Link>
                   <button
                     onClick={handleSignOut}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors"
                   >
-                    退出登录
+                    退出登录 👋
                   </button>
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${
+                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors ${
                     pathname === '/login' ? 'bg-pink-700' : ''
                   }`}
                 >
-                  管理员登录
+                  管理员登录 🔑
                 </Link>
               )
             )}
