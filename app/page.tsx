@@ -52,7 +52,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-blue-500/20 animate-gradient"></div>
         <div className="relative z-10 text-center px-4">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4 animate-fade-in">
-            {settings?.site_title || '宝宝成长记录'} 🌟
+            欢迎来到喻言小朋友的成长乐园！ 🌟
           </h1>
           <p className="text-xl md:text-2xl text-gray-600 mb-8 animate-fade-in-delay">
             {settings?.site_description || '记录宝宝成长的点点滴滴'} ✨

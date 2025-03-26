@@ -5,8 +5,8 @@ import Navbar from '@/components/Navbar';
 import { zcoolKuaile } from './fonts';
 
 export const metadata: Metadata = {
-  title: 'Luca 的成长记录 🌱',
-  description: '记录 Luca 的每一个精彩瞬间 ✨',
+  title: '宥宥小朋友的成长记录 🌱',
+  description: '记录喻言小朋友的每一个精彩瞬间 ✨',
 };
 
 export default function RootLayout({
