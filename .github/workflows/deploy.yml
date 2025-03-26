@@ -55,15 +55,17 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Cleaning up previous installations..."
-          rm -rf node_modules package-lock.json pnpm-lock.yaml
+          rm -rf node_modules package-lock.json
           npm cache clean --force
           
-          echo "Installing dependencies..."
-          npm install --legacy-peer-deps
+          echo "Installing base dependencies..."
+          npm install
           
           echo "Installing Tailwind and related packages..."
-          npm install -D tailwindcss@3.3.0 postcss@8.4.31 autoprefixer@10.4.14 --legacy-peer-deps
-          npm install daisyui@5.0.9 --legacy-peer-deps
+          npm install -D tailwindcss@3.3.0 --save-exact
+          npm install -D postcss@8.4.31 --save-exact
+          npm install -D autoprefixer@10.4.14 --save-exact
+          npm install daisyui@5.0.9 --save-exact
           
           echo "Verifying installations..."
           echo "Node version: $(node -v)"
@@ -124,6 +126,12 @@ jobs:
             plugins: [require("daisyui")],
           }
           EOL
+
+          echo "Verifying Tailwind installation..."
+          npx tailwindcss --help || echo "Tailwind CLI not found"
+          
+          echo "Listing node_modules/tailwindcss contents:"
+          ls -la node_modules/tailwindcss || echo "tailwindcss directory not found"
 
       - name: Setup project structure
         run: |
