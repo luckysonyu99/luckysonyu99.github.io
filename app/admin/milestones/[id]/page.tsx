@@ -7,6 +7,13 @@ import { getMilestone, updateMilestone, uploadMilestonePhoto, deleteMilestonePho
 import type { Milestone } from '@/models/milestone';
 import Image from 'next/image';
 
+// 添加 generateStaticParams 函数
+export async function generateStaticParams() {
+  // 由于这是管理页面，我们可以返回一个空数组
+  // 这意味着这个页面将不会在构建时生成
+  return [];
+}
+
 export default function EditMilestonePage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth();
   const router = useRouter();
