@@ -10,7 +10,7 @@ import type { Photo } from '@/models/gallery';
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function Home() {
+export default function HomePage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -39,93 +39,135 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-yellow-50">
+    <div className="min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
       {/* Hero Section */}
-      <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-blue-500/20 animate-gradient"></div>
-        <div className="relative z-10 text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4 animate-fade-in">
-            欢迎来到喻言小朋友的成长乐园！ 🌟
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 animate-fade-in-delay">
-            {settings?.site_description || '记录宝宝成长的点点滴滴'} ✨
-          </p>
-          <div className="flex justify-center space-x-4">
-            <Link
-              href="/milestones"
-              className="px-6 py-3 bg-pink-500 text-white rounded-full hover:bg-pink-600 transition-colors btn-animate"
-            >
-              查看成长记录 📝
-            </Link>
-            <Link
-              href="/gallery"
-              className="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors btn-animate"
-            >
-              浏览相册 📸
-            </Link>
-          </div>
+      <section className="py-20 text-center">
+        <h1 className="text-5xl font-bold mb-6 font-qingke text-candy-pink">
+          {settings?.site_title || 'Luca\'s Growing Journey'} 🌱
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 font-kuaile">
+          {settings?.site_description || '记录成长的每一个精彩瞬间'} ✨
+        </p>
+        <div className="flex justify-center space-x-4">
+          <a
+            href="/milestones"
+            className="btn btn-primary font-kuaile"
+          >
+            查看里程碑 🎯
+          </a>
+          <a
+            href="/gallery"
+            className="btn btn-secondary font-kuaile"
+          >
+            浏览相册 📸
+          </a>
         </div>
       </section>
 
       {/* Latest Milestones */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gradient">最新成长记录 🎯</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-8 text-center font-qingke text-candy-purple">
+            最新里程碑 🎯
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {milestones.slice(0, 3).map((milestone) => (
-              <div key={milestone.id} className="glass-card rounded-xl p-6 hover-card">
-                <h3 className="text-xl font-bold mb-2">{milestone.title}</h3>
-                <p className="text-gray-600 mb-4">{milestone.description}</p>
-                <p className="text-sm text-gray-500">
+              <div key={milestone.id} className="card card-hover">
+                <h3 className="text-xl font-bold mb-2 font-qingke text-candy-blue">
+                  {milestone.title}
+                </h3>
+                <p className="text-gray-600 mb-4 font-kuaile">
+                  {milestone.description}
+                </p>
+                <p className="text-sm text-gray-500 font-kuaile">
                   {new Date(milestone.milestone_date).toLocaleDateString()}
                 </p>
               </div>
             ))}
           </div>
           <div className="text-center mt-8">
-            <Link
+            <a
               href="/milestones"
-              className="inline-block px-6 py-2 text-pink-600 hover:text-pink-700 transition-colors"
+              className="text-candy-pink hover:text-candy-purple transition-colors font-kuaile"
             >
-              查看更多 → 🎯
-            </Link>
+              查看更多里程碑 →
+            </a>
           </div>
         </div>
       </section>
 
       {/* Latest Photos */}
-      <section className="py-16 px-4 bg-white/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gradient">最新照片 📸</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-8 text-center font-qingke text-candy-yellow">
+            最新照片 📸
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {photos.slice(0, 8).map((photo) => (
-              <div key={photo.id} className="relative aspect-square group hover-card">
+              <div key={photo.id} className="relative aspect-square group">
                 <Image
                   src={photo.url}
-                  alt={photo.title}
+                  alt={photo.title || '照片'}
                   fill
-                  className="object-cover rounded-lg transition-transform group-hover:scale-105"
+                  className="object-cover rounded-lg"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                  <h3 className="text-white text-center px-4">{photo.title}</h3>
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center">
+                  <p className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-center p-4 font-kuaile">
+                    {photo.title}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
           <div className="text-center mt-8">
-            <Link
+            <a
               href="/gallery"
-              className="inline-block px-6 py-2 text-blue-600 hover:text-blue-700 transition-colors"
+              className="text-candy-pink hover:text-candy-purple transition-colors font-kuaile"
             >
-              查看更多 → 📸
-            </Link>
+              查看更多照片 →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Fun Cards Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-8 text-center font-qingke text-candy-green">
+            趣味探索 🎮
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="card card-hover">
+              <h3 className="text-xl font-bold mb-2 font-qingke text-candy-pink">
+                恐龙探险 🦖
+              </h3>
+              <p className="text-gray-600 mb-4 font-kuaile">
+                和Luca一起探索神秘的恐龙世界，认识各种有趣的史前生物！
+              </p>
+            </div>
+            <div className="card card-hover">
+              <h3 className="text-xl font-bold mb-2 font-qingke text-candy-blue">
+                汽车总动员 🚗
+              </h3>
+              <p className="text-gray-600 mb-4 font-kuaile">
+                和闪电麦昆一起驰骋在赛道上，体验速度与激情！
+              </p>
+            </div>
+            <div className="card card-hover">
+              <h3 className="text-xl font-bold mb-2 font-qingke text-candy-yellow">
+                汪汪队出动 🐕
+              </h3>
+              <p className="text-gray-600 mb-4 font-kuaile">
+                和阿奇、毛毛一起拯救冒险湾，成为小英雄！
+              </p>
+            </div>
           </div>
         </div>
       </section>

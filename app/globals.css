@@ -1,17 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-kuaile: 'ZCOOL KuaiLe', sans-serif;
-  --font-qingke: 'ZCOOL QingKe HuangYou', sans-serif;
+  --font-kuaile: 'Comic Neue', cursive;
+  --font-qingke: 'Indie Flower', cursive;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 }
 
 body {
-  font-family: var(--font-kuaile);
+  @apply bg-white text-gray-900;
+  font-family: 'Quicksand', sans-serif;
   background: linear-gradient(135deg, rgba(255, 105, 180, 0.05) 0%, rgba(135, 206, 235, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%);
   min-height: 100vh;
   color: rgb(var(--foreground-rgb));
@@ -25,7 +30,7 @@ body {
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg transition-all duration-300;
+    @apply px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105;
   }
   
   .btn-primary {
@@ -37,7 +42,7 @@ body {
   }
   
   .card {
-    @apply bg-white/70 backdrop-blur-sm shadow-lg rounded-xl border border-white/20 p-6;
+    @apply bg-white rounded-xl p-6 shadow-lg transition-all duration-300;
   }
   
   .input {
@@ -71,7 +76,7 @@ body {
 
 /* 卡片悬停效果 */
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  @apply hover:shadow-xl hover:-translate-y-1;
 }
 
 /* 按钮动画 */
@@ -86,7 +91,7 @@ body {
 
 /* 文字渐变效果 */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-purple;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-blue;
 }
 
 /* 玻璃卡片效果 */
@@ -97,4 +102,18 @@ body {
 /* 输入框焦点效果 */
 .input-focus {
   @apply focus:ring-2 focus:ring-candy-pink focus:border-transparent;
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 1s ease-in-out infinite;
+  }
 } 
