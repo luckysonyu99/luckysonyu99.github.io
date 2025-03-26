@@ -1,14 +1,8 @@
 import type { Metadata } from 'next';
-import { Comic_Neue } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import Navbar from '@/components/Navbar';
-
-const comicNeue = Comic_Neue({ 
-  weight: ['300', '400', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-});
+import { zcoolKuaile } from './fonts';
 
 export const metadata: Metadata = {
   title: 'Luca 的成长记录 🌱',
@@ -22,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <body className={comicNeue.className}>
+      <body className={zcoolKuaile.className}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
