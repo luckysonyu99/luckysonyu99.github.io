@@ -52,6 +52,7 @@ export default function AdminLayout({
     { path: '/admin/milestones', label: '里程碑' },
     { path: '/admin/gallery', label: '相册' },
     { path: '/admin/settings', label: '设置' },
+    { path: '/admin/users', label: '用户' },
   ];
 
   const isActive = (path: string) => {
