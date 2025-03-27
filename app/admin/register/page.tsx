@@ -8,7 +8,6 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFirstAdmin, setIsFirstAdmin] = useState(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -25,29 +24,34 @@ export default function RegisterPage() {
         });
 
         if (authError) {
+          console.error('注册用户失败:', authError);
           throw authError;
         }
 
-        if (authData.user) {
-          // 添加用户到管理员表
-          const { error: adminError } = await supabase
-            .from('admin_users')
-            .insert([
-              {
-                user_id: authData.user.id,
-                email: authData.user.email,
-              },
-            ]);
-
-          if (adminError) {
-            throw adminError;
-          }
-
-          // 注册成功，重定向到登录页面
-          router.push('/admin/login');
+        if (!authData.user) {
+          throw new Error('注册失败：未创建用户');
         }
+
+        // 添加用户到管理员表
+        const { error: adminError } = await supabase
+          .from('admin_users')
+          .insert([
+            {
+              user_id: authData.user.id,
+              email: authData.user.email,
+            },
+          ]);
+
+        if (adminError) {
+          console.error('添加管理员失败:', adminError);
+          throw adminError;
+        }
+
+        // 注册成功，重定向到登录页面
+        router.push('/admin/login');
       } catch (error: any) {
-        setError(error.message || '注册失败');
+        console.error('注册过程出错:', error);
+        setError(error.message || '注册失败，请检查控制台了解详细信息');
       } finally {
         setIsLoading(false);
       }
@@ -84,7 +88,10 @@ export default function RegisterPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
             </div>
           ) : error ? (
-            <div className="text-red-500 text-center">{error}</div>
+            <div className="text-red-500 text-center">
+              <p>{error}</p>
+              <p className="mt-2 text-sm">请检查浏览器控制台了解详细信息</p>
+            </div>
           ) : null}
         </motion.div>
       </div>
