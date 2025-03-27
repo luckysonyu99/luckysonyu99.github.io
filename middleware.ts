@@ -12,14 +12,8 @@ export async function middleware(req: NextRequest) {
   // 检查用户是否已登录
   const { data: { session } } = await supabase.auth.getSession();
 
-  // 检查是否是管理员路由
-  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
-  const isLoginPage = req.nextUrl.pathname === '/admin/login';
-  const isRegisterPage = req.nextUrl.pathname === '/admin/register';
-  const isUnauthorizedPage = req.nextUrl.pathname === '/admin/unauthorized';
-
-  // 如果是管理员路由
-  if (isAdminRoute) {
+  // 如果是访问管理后台相关页面
+  if (req.nextUrl.pathname.startsWith('/admin')) {
     // 如果未登录，重定向到登录页面
     if (!session) {
       return NextResponse.redirect(new URL('/admin/login', req.url));
@@ -37,22 +31,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
     }
 
-    // 如果是管理员且访问登录页面，重定向到管理后台
-    if (isLoginPage) {
+    // 如果已登录管理员访问登录页面，重定向到管理后台
+    if (req.nextUrl.pathname === '/admin/login') {
       return NextResponse.redirect(new URL('/admin', req.url));
-    }
-
-    // 如果是注册页面，检查是否已经有管理员
-    if (isRegisterPage) {
-      const { data: adminUsers } = await supabase
-        .from('admin_users')
-        .select('*')
-        .limit(1);
-
-      // 如果已经有管理员，重定向到未授权页面
-      if (adminUsers && adminUsers.length > 0) {
-        return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
-      }
     }
   }
 
