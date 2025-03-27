@@ -19,7 +19,16 @@ function LoginForm() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push('/admin');
+        // 验证用户是否是管理员
+        const { data: userData } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (userData) {
+          router.push('/admin');
+        }
       }
     };
     checkSession();

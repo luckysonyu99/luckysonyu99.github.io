@@ -38,7 +38,16 @@ export async function middleware(req: NextRequest) {
 
   // 如果已登录用户访问登录页面，重定向到管理后台
   if (req.nextUrl.pathname === '/admin/login' && session) {
-    return NextResponse.redirect(new URL('/admin', req.url));
+    // 验证用户是否是管理员
+    const { data: userData } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (userData) {
+      return NextResponse.redirect(new URL('/admin', req.url));
+    }
   }
 
   return res;
