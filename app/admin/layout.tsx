@@ -64,14 +64,28 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex">
-      <nav className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 fixed h-full">
+      <motion.nav
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200 sticky top-4 h-[calc(100vh-2rem)] m-4 rounded-2xl shadow-lg overflow-hidden"
+      >
         <div className="p-6">
-          <h1 className="text-2xl font-qingke text-candy-purple mb-8">后台管理</h1>
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="flex items-center space-x-2 mb-8"
+          >
+            <span className="text-2xl">✨</span>
+            <h1 className="text-2xl font-qingke text-candy-purple">后台管理</h1>
+          </motion.div>
           <div className="flex flex-col space-y-2">
-            {navItems.map((item) => (
+            {navItems.map((item, index) => (
               <motion.button
                 key={item.path}
-                whileHover={{ scale: 1.05 }}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, x: 10 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push(item.path)}
                 className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -80,24 +94,46 @@ export default function AdminLayout({
                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                 }`}
               >
-                {item.label}
+                {getNavIcon(item.path)} <span className="ml-2">{item.label}</span>
               </motion.button>
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 w-full p-6 border-t border-gray-200">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="absolute bottom-0 w-full p-6 border-t border-gray-200 bg-white/50 backdrop-blur-sm"
+        >
           <div className="flex flex-col space-y-2">
-            <span className="text-sm text-gray-500">{email}</span>
-            <button
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <span>👤</span>
+              <span>{email}</span>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleSignOut}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="flex items-center space-x-2 text-sm text-gray-500 hover:text-gray-700"
             >
-              退出登录
-            </button>
+              <span>🚪</span>
+              <span>退出登录</span>
+            </motion.button>
           </div>
-        </div>
-      </nav>
-      <main className="ml-64 flex-1 p-8">{children}</main>
+        </motion.div>
+      </motion.nav>
+      <main className="flex-1 p-8">{children}</main>
     </div>
   );
+}
+
+function getNavIcon(path: string): string {
+  const icons: Record<string, string> = {
+    '/admin': '🏠',
+    '/admin/milestones': '🎯',
+    '/admin/gallery': '🖼️',
+    '/admin/settings': '⚙️',
+    '/admin/users': '👥',
+  };
+  return icons[path] || '📝';
 } 
