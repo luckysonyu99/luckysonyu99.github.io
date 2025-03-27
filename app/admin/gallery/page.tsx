@@ -1,10 +1,8 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
+
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
-import Image from 'next/image';
+import { supabase } from '@/lib/auth';
 
 interface Photo {
   id: string;
@@ -16,8 +14,6 @@ interface Photo {
 }
 
 export default function GalleryPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -31,16 +27,8 @@ export default function GalleryPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [loading, user, router]);
-
-  useEffect(() => {
-    if (user) {
-      fetchPhotos();
-    }
-  }, [user]);
+    fetchPhotos();
+  }, []);
 
   const fetchPhotos = async () => {
     try {
@@ -88,11 +76,6 @@ export default function GalleryPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.image_url) {
-      alert('请先上传图片');
-      return;
-    }
-
     try {
       if (isEditing) {
         const { error } = await supabase
@@ -150,16 +133,12 @@ export default function GalleryPage() {
     }
   };
 
-  if (loading || isLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   return (
