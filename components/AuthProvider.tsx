@@ -23,7 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 初始化时检查会话状态
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -31,25 +32,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Error checking session:', error);
           return;
         }
-        console.log('Current session:', session);
-        setUser(session?.user ?? null);
+        if (mounted) {
+          console.log('Current session:', session);
+          setUser(session?.user ?? null);
+        }
       } catch (error) {
         console.error('Error in checkSession:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
 
-    // 监听认证状态变化
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (mounted) {
+        console.log('Auth state changed:', event, session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
