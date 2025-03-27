@@ -4,9 +4,9 @@ export interface Milestone {
   id: string;
   title: string;
   description: string;
-  date: string;
+  milestone_date: string;
   category: '成长' | '学习' | '生活' | '有趣' | '其他';
-  emoji: string;
+  image_url?: string;
   created_at?: string;
 }
 
@@ -14,7 +14,7 @@ const getMilestones = async (): Promise<Milestone[]> => {
   const { data, error } = await supabase
     .from('milestones')
     .select('*')
-    .order('date', { ascending: false });
+    .order('milestone_date', { ascending: false });
 
   if (error) {
     console.error('Error fetching milestones:', error);

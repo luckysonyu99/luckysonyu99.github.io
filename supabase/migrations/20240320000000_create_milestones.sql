@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS milestones (
   id BIGSERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
-  date DATE NOT NULL,
+  milestone_date DATE NOT NULL,
   category TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -24,7 +24,7 @@ CREATE TRIGGER update_milestones_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- 创建索引
-CREATE INDEX IF NOT EXISTS milestones_date_idx ON milestones(date DESC);
+CREATE INDEX IF NOT EXISTS milestones_date_idx ON milestones(milestone_date DESC);
 CREATE INDEX IF NOT EXISTS milestones_category_idx ON milestones(category);
 
 -- 设置 RLS 策略
