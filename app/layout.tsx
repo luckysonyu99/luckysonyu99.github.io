@@ -64,7 +64,7 @@ export default function RootLayout({
               </div>
               <div className="flex items-center">
                 <Link
-                  href="/admin"
+                  href="/login"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-candy-pink hover:bg-candy-purple transition-colors"
                 >
                   管理后台
