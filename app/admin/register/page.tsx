@@ -1,21 +1,46 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  const registerUser = async () => {
+  useEffect(() => {
+    // 检查是否已登录
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/admin');
+      }
+    };
+    checkSession();
+  }, [router, supabase.auth]);
+
+  const autoRegister = async () => {
+    setLoading(true);
+    setError(null);
+    setIsRetrying(false);
+
     try {
-      // 注册新用户
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      console.log('开始注册流程...');
+      
+      // 1. 注册用户
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: 'me@moreyu.me',
         password: 'luckysonyu99',
         options: {
@@ -23,105 +48,147 @@ export default function RegisterPage() {
         },
       });
 
-      if (authError) {
-        console.error('注册用户失败:', authError);
-        throw authError;
+      if (signUpError) {
+        console.error('注册用户失败:', signUpError);
+        throw signUpError;
       }
 
-      if (!authData.user) {
-        throw new Error('注册失败：未创建用户');
-      }
+      console.log('用户注册成功:', signUpData);
 
-      // 等待一段时间确保用户创建完成
+      // 2. 等待2秒确保用户创建完成
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 添加用户到管理员表
-      const { error: adminError } = await supabase
+      // 3. 创建管理员记录
+      const { data: adminData, error: adminError } = await supabase
         .from('admin_users')
         .insert([
           {
-            user_id: authData.user.id,
-            email: authData.user.email,
+            user_id: signUpData.user?.id,
+            email: 'me@moreyu.me',
+            role: 'admin',
+            created_at: new Date().toISOString(),
           },
-        ]);
+        ])
+        .select();
 
       if (adminError) {
-        console.error('添加管理员失败:', adminError);
+        console.error('创建管理员记录失败:', adminError);
         throw adminError;
       }
 
-      // 注册成功，重定向到登录页面
-      router.push('/admin/login');
+      console.log('管理员记录创建成功:', adminData);
+
+      // 4. 登录用户
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: 'me@moreyu.me',
+        password: 'luckysonyu99',
+      });
+
+      if (signInError) {
+        console.error('登录失败:', signInError);
+        throw signInError;
+      }
+
+      console.log('登录成功，准备跳转...');
+      router.push('/admin');
     } catch (error: any) {
       console.error('注册过程出错:', error);
-      throw error;
+      setError(error.message || '注册失败，请重试');
+
+      // 如果是数据库表不存在错误，尝试创建表
+      if (error.message?.includes('relation "admin_users" does not exist')) {
+        try {
+          console.log('尝试创建 admin_users 表...');
+          const { error: createTableError } = await supabase.rpc('create_admin_users_table');
+          if (createTableError) {
+            console.error('创建表失败:', createTableError);
+          } else {
+            console.log('表创建成功，准备重试...');
+            // 重试注册流程
+            if (retryCount < 3) {
+              setRetryCount(prev => prev + 1);
+              setIsRetrying(true);
+              setTimeout(autoRegister, 5000);
+            }
+          }
+        } catch (createTableError: any) {
+          console.error('创建表时出错:', createTableError);
+        }
+      } else if (retryCount < 3) {
+        setRetryCount(prev => prev + 1);
+        setIsRetrying(true);
+        setTimeout(autoRegister, 5000);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    const autoRegister = async () => {
-      setIsLoading(true);
-      setError('');
-
-      try {
-        await registerUser();
-      } catch (error: any) {
-        console.error('注册失败:', error);
-        setError(error.message || '注册失败，请检查控制台了解详细信息');
-        
-        // 如果失败次数小于3次，5秒后重试
-        if (retryCount < 3) {
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, 5000);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    autoRegister();
-  }, [supabase, router, retryCount]);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="mt-6 text-3xl font-qingke text-candy-purple">
-            正在创建管理员账号
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {retryCount > 0 ? `第 ${retryCount} 次尝试...` : '请稍候...'}
-          </p>
-        </motion.div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">管理员注册</CardTitle>
+          <CardDescription className="text-center">
+            点击下方按钮自动注册管理员账号
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>错误</AlertTitle>
+              <AlertDescription>
+                {error}
+                {retryCount >= 3 && (
+                  <div className="mt-2">
+                    <p>已达到最大重试次数，请刷新页面重试。</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => window.location.reload()}
+                    >
+                      刷新页面
+                    </Button>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {isRetrying && (
+            <Alert className="mb-4">
+              <AlertTitle>正在重试</AlertTitle>
+              <AlertDescription>
+                第 {retryCount} 次重试中...请稍候
+              </AlertDescription>
+            </Alert>
+          )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-white/20"
-        >
-          {isLoading ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
-            </div>
-          ) : error ? (
-            <div className="text-red-500 text-center">
-              <p>{error}</p>
-              <p className="mt-2 text-sm">
-                {retryCount < 3 
-                  ? `将在5秒后进行第 ${retryCount + 1} 次尝试...`
-                  : '已达到最大重试次数，请刷新页面重试'}
-              </p>
-            </div>
-          ) : null}
-        </motion.div>
-      </div>
+          <Button
+            className="w-full"
+            onClick={autoRegister}
+            disabled={loading || isRetrying}
+          >
+            {loading || isRetrying ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isRetrying ? '重试中...' : '注册中...'}
+              </>
+            ) : (
+              '一键注册管理员账号'
+            )}
+          </Button>
+
+          <div className="mt-4 text-sm text-gray-500 text-center">
+            <p>邮箱: me@moreyu.me</p>
+            <p>密码: luckysonyu99</p>
+            <p className="mt-2">
+              注册成功后请及时修改密码！
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 
