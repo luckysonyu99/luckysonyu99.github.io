@@ -10,30 +10,29 @@ CREATE TABLE IF NOT EXISTS admin_users (
 -- 创建RLS策略
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
--- 只允许管理员读取
-CREATE POLICY "只允许管理员读取" ON admin_users
+-- 允许所有已认证用户读取
+CREATE POLICY "允许所有已认证用户读取" ON admin_users
   FOR SELECT
   TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM admin_users
-      WHERE user_id = auth.uid()
-    )
-  );
+  USING (true);
 
--- 只允许超级管理员插入
-CREATE POLICY "只允许超级管理员插入" ON admin_users
+-- 允许第一个管理员用户插入
+CREATE POLICY "允许第一个管理员用户插入" ON admin_users
   FOR INSERT
   TO authenticated
   WITH CHECK (
+    -- 如果表中没有数据，允许插入
+    NOT EXISTS (SELECT 1 FROM admin_users)
+    OR
+    -- 如果用户已经是管理员，允许插入
     EXISTS (
       SELECT 1 FROM admin_users
       WHERE user_id = auth.uid()
     )
   );
 
--- 只允许超级管理员删除
-CREATE POLICY "只允许超级管理员删除" ON admin_users
+-- 只允许管理员删除
+CREATE POLICY "只允许管理员删除" ON admin_users
   FOR DELETE
   TO authenticated
   USING (
