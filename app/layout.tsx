@@ -2,7 +2,7 @@ import React from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
 import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
-import Navigation from '@/components/Navigation';
+import Navigation from './components/Navigation';
 
 const zcoolKuaiLe = ZCOOL_KuaiLe({ 
   weight: '400',
