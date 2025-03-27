@@ -2,85 +2,91 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { signIn } from '@/lib/auth';
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        // 更新登录尝试次数
+        const attempts = parseInt(Cookies.get('login_attempts') || '0') + 1;
+        Cookies.set('login_attempts', attempts.toString());
+        Cookies.set('last_attempt_time', Date.now().toString());
+
+        if (attempts >= 3) {
+          router.push('/admin/unauthorized');
+          return;
+        }
+
+        throw error;
+      }
+
+      // 登录成功，清除登录尝试记录
+      Cookies.remove('login_attempts');
+      Cookies.remove('last_attempt_time');
+      
       router.push('/admin');
-      router.refresh();
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('登录失败，请检查邮箱和密码');
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      setError(error.message || '登录失败');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/20 to-candy-purple/20">
-      <div className="w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg">
-          <h1 className="text-3xl font-qingke text-candy-purple text-center mb-8">
-            管理员登录
-          </h1>
-
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg max-w-md w-full mx-4"
+      >
+        <h1 className="text-2xl font-qingke text-candy-purple mb-8 text-center">
+          后台管理登录
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-gray-700 mb-2">邮箱</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 mb-2">密码</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+              required
+            />
+          </div>
           {error && (
-            <div className="mb-4 p-4 text-red-500 bg-red-50 rounded-lg">
-              {error}
-            </div>
+            <p className="text-red-500 text-sm">{error}</p>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="email">
-                邮箱
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="password">
-                密码
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
-            >
-              {isLoading ? '登录中...' : '登录'}
-            </button>
-          </form>
-        </div>
-      </div>
+          <motion.button
+            type="submit"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full px-6 py-3 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
+          >
+            登录
+          </motion.button>
+        </form>
+      </motion.div>
     </div>
   );
 } 
