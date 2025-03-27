@@ -3,23 +3,26 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-class SupabaseClient {
-  private static instance: ReturnType<typeof createClient>;
-
-  private constructor() {}
-
-  public static getInstance(): ReturnType<typeof createClient> {
-    if (!SupabaseClient.instance) {
-      SupabaseClient.instance = createClient(supabaseUrl, supabaseKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true
-        }
-      });
-    }
-    return SupabaseClient.instance;
-  }
+// 使用全局变量来存储 Supabase 客户端实例
+declare global {
+  var supabaseClient: ReturnType<typeof createClient> | undefined;
 }
 
-export const supabase = SupabaseClient.getInstance(); 
+// 确保只在服务器端或客户端首次加载时创建实例
+if (typeof window !== 'undefined' && !global.supabaseClient) {
+  global.supabaseClient = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  });
+}
+
+export const supabase = global.supabaseClient || createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+}); 

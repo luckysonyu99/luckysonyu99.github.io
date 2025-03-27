@@ -25,19 +25,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const checkSession = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Error checking session:', error);
+        // 获取当前会话
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
           return;
         }
+
         if (mounted) {
-          console.log('Current session:', session);
+          console.log('Initial session:', session);
           setUser(session?.user ?? null);
         }
+
+        // 监听认证状态变化
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (mounted) {
+            console.log('Auth state changed:', event, session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('Error in checkSession:', error);
+        console.error('Error initializing auth:', error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -45,19 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        console.log('Auth state changed:', event, session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
+    initializeAuth();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
@@ -109,4 +115,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   return useContext(AuthContext);
+} 
 } 
