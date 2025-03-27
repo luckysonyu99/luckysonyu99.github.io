@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/auth';
 
 interface Stats {
@@ -11,6 +12,7 @@ interface Stats {
 }
 
 export default function AdminHomePage() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats>({ milestones: 0, photos: 0, users: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -118,7 +120,7 @@ export default function AdminHomePage() {
               key={action.label}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = action.path}
+              onClick={() => router.push(action.path)}
               className="flex items-center space-x-2 lg:space-x-3 p-3 lg:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
             >
               <span className="text-xl lg:text-2xl">{action.icon}</span>

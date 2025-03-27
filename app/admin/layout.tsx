@@ -14,6 +14,11 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [email, setEmail] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -52,7 +57,7 @@ export default function AdminLayout({
 
       {/* 导航栏 */}
       <AnimatePresence>
-        {(isMenuOpen || window.innerWidth >= 1024) && (
+        {(isMenuOpen || (isClient && window.innerWidth >= 1024)) && (
           <motion.nav
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
