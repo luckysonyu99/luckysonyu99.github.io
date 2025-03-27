@@ -20,7 +20,7 @@ const zcoolQingKe = ZCOOL_QingKe_HuangYou({
 });
 
 export const metadata: Metadata = {
-  title: '宥宥小朋友的成长记录',
+  title: 'Luca\'s Growing Journey',
   description: '记录宝宝成长的点点滴滴',
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
                   <Link href="/" className="text-2xl font-qingke text-candy-pink hover:text-candy-purple transition-colors">
-                    🌟 宥宥的成长乐园
+                    🦖 Luca
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -76,7 +76,7 @@ export default function RootLayout({
         <main className="container mx-auto px-4 py-8">{children}</main>
         <footer className="bg-white/70 backdrop-blur-sm shadow-lg rounded-t-2xl border border-white/20 mt-16 py-8">
           <div className="container mx-auto px-4 text-center">
-            <p className="font-qingke text-candy-purple">© {new Date().getFullYear()} 宥宥的成长乐园. All rights reserved.</p>
+            <p className="font-qingke text-candy-purple">© 2022-2025 Luca's Growing Journey. All rights reserved.</p>
           </div>
         </footer>
       </body>
