@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { signIn } from '@/lib/auth';
@@ -10,7 +10,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // 检查是否在封禁期内
+    const loginAttempts = Cookies.get('login_attempts');
+    const lastAttemptTime = Cookies.get('last_attempt_time');
+    const attempts = loginAttempts ? parseInt(loginAttempts) : 0;
+    const lastAttempt = lastAttemptTime ? parseInt(lastAttemptTime) : 0;
+    const isBlocked = attempts >= 3 && (Date.now() - lastAttempt) < 30 * 60 * 1000;
+
+    if (isBlocked) {
+      setIsUnauthorized(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +40,7 @@ export default function LoginPage() {
         Cookies.set('last_attempt_time', Date.now().toString());
 
         if (attempts >= 3) {
-          router.push('/admin/unauthorized');
+          setIsUnauthorized(true);
           return;
         }
 
@@ -42,6 +56,34 @@ export default function LoginPage() {
       setError(error.message || '登录失败');
     }
   };
+
+  if (isUnauthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg max-w-lg w-full mx-4 text-center"
+        >
+          <div className="text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-qingke text-candy-purple mb-4">
+            您已来到一个不属于你管理的地界
+          </h1>
+          <p className="text-gray-600 mb-6">
+            需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦
+          </p>
+          <motion.a
+            href="/"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block px-6 py-3 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
+          >
+            返回首页
+          </motion.a>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
