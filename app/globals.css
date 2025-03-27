@@ -66,11 +66,11 @@ body {
   }
 
   .font-kuaile {
-    font-family: 'ZCOOL KuaiLe', cursive;
+    font-family: var(--font-kuaile);
   }
 
   .font-qingke {
-    font-family: 'ZCOOL QingKe HuangYou', cursive;
+    font-family: var(--font-qingke);
   }
 
   .text-candy-pink {

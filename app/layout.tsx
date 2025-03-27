@@ -1,14 +1,27 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import React from 'react';
 import './globals.css';
+import type { Metadata } from 'next';
+import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
+const zcoolKuaiLe = ZCOOL_KuaiLe({ 
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-kuaile',
+  display: 'swap',
+});
+
+const zcoolQingKe = ZCOOL_QingKe_HuangYou({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-qingke',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Luca is Growing',
-  description: '记录 Luca 的成长点滴',
+  title: 'Luca\'s Growing Journey',
+  description: '记录宝宝成长的点点滴滴',
 };
 
 export default function RootLayout({
@@ -17,16 +30,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap"
-        />
-      </head>
-      <body className={inter.className}>
+    <html lang="zh" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
+      <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
         <Navigation />
-        <main className="min-h-screen">{children}</main>
+        <main className="container mx-auto px-4 py-8">{children}</main>
         <Footer />
       </body>
     </html>
