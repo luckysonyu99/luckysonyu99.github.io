@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/auth';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
 interface Milestone {
   id: string;
@@ -23,6 +25,47 @@ export default function MilestonesPage() {
     date: '',
     image_url: '',
   });
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/admin/login');
+        return;
+      }
+
+      // 验证用户是否是管理员
+      const { data: userData } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (!userData) {
+        router.push('/admin/unauthorized');
+        return;
+      }
+
+      setIsLoading(false);
+    };
+
+    checkSession();
+
+    // 设置实时订阅
+    const subscription = supabase
+      .channel('milestone_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'milestones' }, (payload) => {
+        // 当数据发生变化时，刷新页面
+        window.location.reload();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, router]);
 
   useEffect(() => {
     fetchMilestones();
