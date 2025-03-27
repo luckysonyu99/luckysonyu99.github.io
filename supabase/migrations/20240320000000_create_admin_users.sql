@@ -40,6 +40,33 @@ CREATE POLICY "Allow authenticated users to delete admin users"
     TO authenticated
     USING (true);
 
+-- 创建函数用于添加管理员用户
+CREATE OR REPLACE FUNCTION add_admin_user(user_id UUID, email TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO admin_users (user_id, email, role)
+    VALUES (user_id, email, 'admin')
+    ON CONFLICT (user_id) DO NOTHING;
+END;
+$$;
+
+-- 创建函数用于检查用户是否是管理员
+CREATE OR REPLACE FUNCTION is_admin_user(user_id UUID)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM admin_users
+        WHERE admin_users.user_id = $1
+    );
+END;
+$$;
+
 -- 创建函数用于创建 admin_users 表
 CREATE OR REPLACE FUNCTION create_admin_users_table()
 RETURNS void
@@ -91,5 +118,32 @@ BEGIN
         ON admin_users FOR DELETE
         TO authenticated
         USING (true);
+
+    -- 创建函数用于添加管理员用户
+    CREATE OR REPLACE FUNCTION add_admin_user(user_id UUID, email TEXT)
+    RETURNS void
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    AS $$
+    BEGIN
+        INSERT INTO admin_users (user_id, email, role)
+        VALUES (user_id, email, 'admin')
+        ON CONFLICT (user_id) DO NOTHING;
+    END;
+    $$;
+
+    -- 创建函数用于检查用户是否是管理员
+    CREATE OR REPLACE FUNCTION is_admin_user(user_id UUID)
+    RETURNS boolean
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    AS $$
+    BEGIN
+        RETURN EXISTS (
+            SELECT 1 FROM admin_users
+            WHERE admin_users.user_id = $1
+        );
+    END;
+    $$;
 END;
 $$; 
