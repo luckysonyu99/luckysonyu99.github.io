@@ -12,6 +12,10 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --candy-pink: #FF69B4;
+  --candy-purple: #9370DB;
+  --candy-blue: #87CEEB;
+  --candy-yellow: #FFD700;
 }
 
 body {
@@ -25,6 +29,10 @@ body {
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     @apply font-qingke;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5;
   }
 }
 
@@ -55,6 +63,78 @@ body {
   
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-candy-pink to-candy-blue;
+  }
+
+  .font-kuaile {
+    font-family: 'ZCOOL KuaiLe', cursive;
+  }
+
+  .font-qingke {
+    font-family: 'ZCOOL QingKe HuangYou', cursive;
+  }
+
+  .text-candy-pink {
+    color: var(--candy-pink);
+  }
+
+  .text-candy-purple {
+    color: var(--candy-purple);
+  }
+
+  .text-candy-blue {
+    color: var(--candy-blue);
+  }
+
+  .text-candy-yellow {
+    color: var(--candy-yellow);
+  }
+
+  .bg-candy-pink {
+    background-color: var(--candy-pink);
+  }
+
+  .bg-candy-purple {
+    background-color: var(--candy-purple);
+  }
+
+  .bg-candy-blue {
+    background-color: var(--candy-blue);
+  }
+
+  .bg-candy-yellow {
+    background-color: var(--candy-yellow);
+  }
+
+  .border-candy-pink {
+    border-color: var(--candy-pink);
+  }
+
+  .border-candy-purple {
+    border-color: var(--candy-purple);
+  }
+
+  .border-candy-blue {
+    border-color: var(--candy-blue);
+  }
+
+  .border-candy-yellow {
+    border-color: var(--candy-yellow);
+  }
+
+  .ring-candy-pink {
+    --tw-ring-color: var(--candy-pink);
+  }
+
+  .ring-candy-purple {
+    --tw-ring-color: var(--candy-purple);
+  }
+
+  .ring-candy-blue {
+    --tw-ring-color: var(--candy-blue);
+  }
+
+  .ring-candy-yellow {
+    --tw-ring-color: var(--candy-yellow);
   }
 }
 
