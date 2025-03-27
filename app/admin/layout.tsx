@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { getUser, signOut } from '@/lib/auth';
 
 export default function AdminLayout({
@@ -10,27 +10,33 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuth = async () => {
+      if (pathname === '/admin/login') return;
+
       try {
-        const user = await getUser();
-        setEmail(user?.email || null);
+        const { user, error } = await getUser();
+        if (error || !user) {
+          throw new Error('未登录');
+        }
+        setEmail(user.email || null);
       } catch (error) {
         console.error('Error fetching user:', error);
         router.push('/admin/login');
       }
     };
 
-    fetchUser();
-  }, []);
+    checkAuth();
+  }, [pathname]);
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      const { error } = await signOut();
+      if (error) throw error;
       router.push('/admin/login');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -38,63 +44,58 @@ export default function AdminLayout({
   };
 
   if (pathname === '/admin/login') {
-    return children;
+    return <>{children}</>;
   }
 
   const navItems = [
-    { href: '/admin', label: '首页', match: pathname === '/admin' },
-    { href: '/admin/milestones', label: '里程碑', match: pathname.startsWith('/admin/milestones') },
-    { href: '/admin/gallery', label: '相册', match: pathname.startsWith('/admin/gallery') },
-    { href: '/admin/settings', label: '设置', match: pathname.startsWith('/admin/settings') },
+    { path: '/admin', label: '首页' },
+    { path: '/admin/milestones', label: '里程碑' },
+    { path: '/admin/gallery', label: '相册' },
+    { path: '/admin/settings', label: '设置' },
   ];
 
+  const isActive = (path: string) => {
+    if (path === '/admin') {
+      return pathname === '/admin';
+    }
+    return pathname.startsWith(path);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-candy-pink/20 to-candy-purple/20">
-      <nav className="bg-white/80 backdrop-blur-sm shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-2xl font-qingke text-candy-purple">
-                  后台管理
-                </span>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      item.match
-                        ? 'border-candy-pink text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
+              {navItems.map((item) => (
+                <motion.button
+                  key={item.path}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push(item.path)}
+                  className={`inline-flex items-center px-4 border-b-2 text-sm font-medium ${
+                    isActive(item.path)
+                      ? 'border-candy-pink text-candy-purple'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {item.label}
+                </motion.button>
+              ))}
             </div>
-            <div className="hidden sm:ml-6 sm:flex sm:items-center">
-              <div className="ml-3 relative">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-500">{email}</span>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    退出
-                  </button>
-                </div>
-              </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">{email}</span>
+              <button
+                onClick={handleSignOut}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                退出登录
+              </button>
             </div>
           </div>
         </div>
       </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
     </div>
   );
 } 
