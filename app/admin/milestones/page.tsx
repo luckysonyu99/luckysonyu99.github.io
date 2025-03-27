@@ -1,16 +1,14 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/auth';
 
 interface Milestone {
   id: string;
   title: string;
   description: string;
   date: string;
-  category: string;
-  image_url?: string;
+  image_url: string;
 }
 
 export default function MilestonesPage() {
@@ -18,14 +16,13 @@ export default function MilestonesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
-    category: '其他',
     image_url: '',
   });
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchMilestones();
@@ -58,13 +55,13 @@ export default function MilestonesPage() {
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('gallery')
+        .from('milestones')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('gallery')
+        .from('milestones')
         .getPublicUrl(filePath);
 
       setFormData({ ...formData, image_url: publicUrl });
@@ -99,7 +96,6 @@ export default function MilestonesPage() {
         title: '',
         description: '',
         date: '',
-        category: '其他',
         image_url: '',
       });
       fetchMilestones();
@@ -114,8 +110,7 @@ export default function MilestonesPage() {
       title: milestone.title,
       description: milestone.description,
       date: milestone.date,
-      category: milestone.category,
-      image_url: milestone.image_url || '',
+      image_url: milestone.image_url,
     });
     setIsAdding(true);
   };
@@ -194,21 +189,6 @@ export default function MilestonesPage() {
               />
             </div>
             <div>
-              <label className="block text-gray-700 mb-2">分类</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                required
-              >
-                <option value="其他">其他</option>
-                <option value="成长">成长</option>
-                <option value="学习">学习</option>
-                <option value="生活">生活</option>
-                <option value="有趣">有趣</option>
-              </select>
-            </div>
-            <div>
               <label className="block text-gray-700 mb-2">图片</label>
               <div className="flex items-center space-x-4">
                 {formData.image_url && (
@@ -223,6 +203,7 @@ export default function MilestonesPage() {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  required={!isEditing}
                   disabled={uploading}
                 />
               </div>
@@ -238,7 +219,6 @@ export default function MilestonesPage() {
                     title: '',
                     description: '',
                     date: '',
-                    category: '其他',
                     image_url: '',
                   });
                 }}
@@ -267,20 +247,16 @@ export default function MilestonesPage() {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
           >
-            {milestone.image_url && (
-              <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
-                <img
-                  src={milestone.image_url}
-                  alt={milestone.title}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-            )}
+            <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+              <img
+                src={milestone.image_url}
+                alt={milestone.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
             <h2 className="text-2xl font-qingke text-candy-purple mb-2">{milestone.title}</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>{milestone.date}</span>
-              <span>·</span>
-              <span>{milestone.category}</span>
+              <span>{new Date(milestone.date).toLocaleDateString()}</span>
             </div>
             <p className="text-gray-700 mb-4">{milestone.description}</p>
             <div className="flex justify-end space-x-4">

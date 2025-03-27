@@ -1,21 +1,41 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { supabase } from '@/lib/auth';
+
+interface Stats {
+  milestones: number;
+  photos: number;
+}
 
 export default function AdminPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const [stats, setStats] = useState<Stats>({ milestones: 0, photos: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [loading, user, router]);
+    fetchStats();
+  }, []);
 
-  if (loading) {
+  const fetchStats = async () => {
+    try {
+      const [milestonesResponse, photosResponse] = await Promise.all([
+        supabase.from('milestones').select('id', { count: 'exact' }),
+        supabase.from('photos').select('id', { count: 'exact' }),
+      ]);
+
+      setStats({
+        milestones: milestonesResponse.count || 0,
+        photos: photosResponse.count || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
@@ -23,35 +43,33 @@ export default function AdminPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">管理面板 ⚙️</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link
-          href="/admin/milestones"
-          className="bg-white/70 backdrop-blur-sm rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-white/20"
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-qingke text-candy-purple">后台管理</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
         >
-          <h2 className="text-xl font-semibold mb-2">里程碑管理 📝</h2>
-          <p className="text-gray-600">添加、编辑和删除里程碑 ✨</p>
-        </Link>
-        <Link
-          href="/admin/gallery"
-          className="bg-white/70 backdrop-blur-sm rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-white/20"
+          <h2 className="text-2xl font-qingke text-candy-purple mb-4">里程碑</h2>
+          <p className="text-4xl font-bold text-gray-700">{stats.milestones}</p>
+          <p className="text-gray-500 mt-2">已创建的里程碑数量</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
         >
-          <h2 className="text-xl font-semibold mb-2">相册管理 📸</h2>
-          <p className="text-gray-600">上传、编辑和删除照片 🖼️</p>
-        </Link>
-        <Link
-          href="/admin/settings"
-          className="bg-white/70 backdrop-blur-sm rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-white/20"
-        >
-          <h2 className="text-xl font-semibold mb-2">设置 ⚙️</h2>
-          <p className="text-gray-600">管理网站设置和个人信息 🔧</p>
-        </Link>
+          <h2 className="text-2xl font-qingke text-candy-purple mb-4">相册</h2>
+          <p className="text-4xl font-bold text-gray-700">{stats.photos}</p>
+          <p className="text-gray-500 mt-2">已上传的照片数量</p>
+        </motion.div>
       </div>
     </div>
   );
