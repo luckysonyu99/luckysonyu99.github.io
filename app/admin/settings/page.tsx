@@ -13,13 +13,12 @@ interface Settings {
     github?: string;
     twitter?: string;
     instagram?: string;
-    bilibili?: string;
     [key: string]: string | undefined;
   };
   contact_info: {
     email?: string;
-    wechat?: string;
-    qq?: string;
+    phone?: string;
+    address?: string;
     [key: string]: string | undefined;
   };
 }
@@ -88,22 +87,22 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSocialLinksChange = (platform: string, value: string) => {
+  const handleSocialLinksChange = (key: string, value: string) => {
     setFormData({
       ...formData,
       social_links: {
         ...formData.social_links,
-        [platform]: value,
+        [key]: value,
       },
     });
   };
 
-  const handleContactInfoChange = (type: string, value: string) => {
+  const handleContactInfoChange = (key: string, value: string) => {
     setFormData({
       ...formData,
       contact_info: {
         ...formData.contact_info,
-        [type]: value,
+        [key]: value,
       },
     });
   };
@@ -127,10 +126,8 @@ export default function SettingsPage() {
       }
 
       await fetchSettings();
-      alert('设置已保存');
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('保存设置时出错');
     }
   };
 
@@ -144,7 +141,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-qingke text-candy-purple">网站设置</h1>
       </div>
 
@@ -200,83 +197,69 @@ export default function SettingsPage() {
 
           <div className="space-y-4">
             <h2 className="text-xl font-qingke text-candy-purple">社交链接</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">GitHub</label>
-                <input
-                  type="url"
-                  value={formData.social_links.github || ''}
-                  onChange={(e) => handleSocialLinksChange('github', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="https://github.com/username"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Twitter</label>
-                <input
-                  type="url"
-                  value={formData.social_links.twitter || ''}
-                  onChange={(e) => handleSocialLinksChange('twitter', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="https://twitter.com/username"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Instagram</label>
-                <input
-                  type="url"
-                  value={formData.social_links.instagram || ''}
-                  onChange={(e) => handleSocialLinksChange('instagram', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="https://instagram.com/username"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">哔哩哔哩</label>
-                <input
-                  type="url"
-                  value={formData.social_links.bilibili || ''}
-                  onChange={(e) => handleSocialLinksChange('bilibili', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="https://space.bilibili.com/uid"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-700 mb-2">GitHub</label>
+              <input
+                type="url"
+                value={formData.social_links.github || ''}
+                onChange={(e) => handleSocialLinksChange('github', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                placeholder="https://github.com/username"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Twitter</label>
+              <input
+                type="url"
+                value={formData.social_links.twitter || ''}
+                onChange={(e) => handleSocialLinksChange('twitter', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                placeholder="https://twitter.com/username"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Instagram</label>
+              <input
+                type="url"
+                value={formData.social_links.instagram || ''}
+                onChange={(e) => handleSocialLinksChange('instagram', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                placeholder="https://instagram.com/username"
+              />
             </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-xl font-qingke text-candy-purple">联系方式</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">邮箱</label>
-                <input
-                  type="email"
-                  value={formData.contact_info.email || ''}
-                  onChange={(e) => handleContactInfoChange('email', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="your@email.com"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">微信</label>
-                <input
-                  type="text"
-                  value={formData.contact_info.wechat || ''}
-                  onChange={(e) => handleContactInfoChange('wechat', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="微信号"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">QQ</label>
-                <input
-                  type="text"
-                  value={formData.contact_info.qq || ''}
-                  onChange={(e) => handleContactInfoChange('qq', e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  placeholder="QQ号"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-700 mb-2">邮箱</label>
+              <input
+                type="email"
+                value={formData.contact_info.email || ''}
+                onChange={(e) => handleContactInfoChange('email', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                placeholder="your@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">电话</label>
+              <input
+                type="tel"
+                value={formData.contact_info.phone || ''}
+                onChange={(e) => handleContactInfoChange('phone', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                placeholder="+86 123 4567 8900"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">地址</label>
+              <textarea
+                value={formData.contact_info.address || ''}
+                onChange={(e) => handleContactInfoChange('address', e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                rows={2}
+                placeholder="你的地址"
+              />
             </div>
           </div>
 
@@ -284,7 +267,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={uploading}
-              className="px-6 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
             >
               保存设置
             </button>

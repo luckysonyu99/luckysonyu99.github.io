@@ -134,21 +134,10 @@ export default function GalleryPage() {
     setIsAdding(true);
   };
 
-  const handleDelete = async (id: string, image_url: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('确定要删除这张照片吗？')) return;
 
     try {
-      // 删除存储中的图片
-      const imagePath = image_url.split('/').pop();
-      if (imagePath) {
-        const { error: storageError } = await supabase.storage
-          .from('gallery')
-          .remove([imagePath]);
-
-        if (storageError) throw storageError;
-      }
-
-      // 删除数据库记录
       const { error } = await supabase
         .from('photos')
         .delete()
@@ -228,7 +217,7 @@ export default function GalleryPage() {
               </select>
             </div>
             <div>
-              <label className="block text-gray-700 mb-2">图片</label>
+              <label className="block text-gray-700 mb-2">照片</label>
               <div className="flex items-center space-x-4">
                 {formData.image_url && (
                   <img
@@ -242,8 +231,8 @@ export default function GalleryPage() {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  required={!isEditing}
                   disabled={uploading}
-                  required={!formData.image_url}
                 />
               </div>
               {uploading && <p className="text-sm text-gray-500 mt-2">上传中...</p>}
@@ -308,7 +297,7 @@ export default function GalleryPage() {
                 编辑
               </button>
               <button
-                onClick={() => handleDelete(photo.id, photo.image_url)}
+                onClick={() => handleDelete(photo.id)}
                 className="text-red-500 hover:text-red-700 transition-colors"
               >
                 删除

@@ -8,7 +8,7 @@ interface Milestone {
   id: string;
   title: string;
   description: string;
-  milestone_date: string;
+  date: string;
   category: string;
   image_url?: string;
 }
@@ -21,7 +21,7 @@ export default function MilestonesPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    milestone_date: '',
+    date: '',
     category: '其他',
     image_url: '',
   });
@@ -36,7 +36,7 @@ export default function MilestonesPage() {
       const { data, error } = await supabase
         .from('milestones')
         .select('*')
-        .order('milestone_date', { ascending: false });
+        .order('date', { ascending: false });
 
       if (error) throw error;
       setMilestones(data || []);
@@ -98,7 +98,7 @@ export default function MilestonesPage() {
       setFormData({
         title: '',
         description: '',
-        milestone_date: '',
+        date: '',
         category: '其他',
         image_url: '',
       });
@@ -113,7 +113,7 @@ export default function MilestonesPage() {
     setFormData({
       title: milestone.title,
       description: milestone.description,
-      milestone_date: milestone.milestone_date,
+      date: milestone.date,
       category: milestone.category,
       image_url: milestone.image_url || '',
     });
@@ -187,8 +187,8 @@ export default function MilestonesPage() {
               <label className="block text-gray-700 mb-2">日期</label>
               <input
                 type="date"
-                value={formData.milestone_date}
-                onChange={(e) => setFormData({ ...formData, milestone_date: e.target.value })}
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
               />
@@ -237,7 +237,7 @@ export default function MilestonesPage() {
                   setFormData({
                     title: '',
                     description: '',
-                    milestone_date: '',
+                    date: '',
                     category: '其他',
                     image_url: '',
                   });
@@ -278,7 +278,7 @@ export default function MilestonesPage() {
             )}
             <h2 className="text-2xl font-qingke text-candy-purple mb-2">{milestone.title}</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>{milestone.milestone_date}</span>
+              <span>{milestone.date}</span>
               <span>·</span>
               <span>{milestone.category}</span>
             </div>
