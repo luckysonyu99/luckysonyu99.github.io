@@ -70,6 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting to sign in...');
+      
+      // 验证邮箱格式
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+      }
+
+      // 验证密码长度
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -78,6 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Sign in error:', error);
         throw error;
+      }
+
+      // 验证用户是否存在于 Supabase
+      if (!data.user) {
+        throw new Error('User not found');
       }
       
       console.log('Sign in successful:', data);
