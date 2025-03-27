@@ -69,9 +69,11 @@ export default function LoginPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">未授权访问</h3>
+                <h3 className="text-sm font-medium text-red-800">未授权访问 ⚠️</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  <p>此页面仅供管理员访问。如果您不是管理员，请返回首页。</p>
+                  <p>您已来到一个不属于你管理的地界！🚫</p>
+                  <p>需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦</p>
+                  <p>或者去找小恐龙 🦖 帮忙哦！</p>
                 </div>
               </div>
             </div>
