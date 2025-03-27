@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './globals.css';
 import type { Metadata } from 'next';
 import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const zcoolKuaiLe = ZCOOL_KuaiLe({ 
   weight: '400',
@@ -29,6 +30,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <html lang="zh" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
       <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
@@ -63,15 +66,74 @@ export default function RootLayout({
                 </div>
               </div>
               <div className="flex items-center">
+                <div className="sm:hidden">
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-900 hover:text-candy-pink hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-candy-pink"
+                  >
+                    <span className="sr-only">打开菜单</span>
+                    {!isMenuOpen ? (
+                      <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    ) : (
+                      <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 <Link
                   href="/login"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-candy-pink hover:bg-candy-purple transition-colors"
+                  className="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-candy-pink hover:bg-candy-purple transition-colors"
                 >
                   管理后台
                 </Link>
               </div>
             </div>
           </div>
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="sm:hidden"
+              >
+                <div className="pt-2 pb-3 space-y-1">
+                  <Link
+                    href="/"
+                    className="block pl-3 pr-4 py-2 text-base font-medium text-gray-900 hover:text-candy-pink hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    首页
+                  </Link>
+                  <Link
+                    href="/milestones"
+                    className="block pl-3 pr-4 py-2 text-base font-medium text-gray-900 hover:text-candy-pink hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    里程碑
+                  </Link>
+                  <Link
+                    href="/gallery"
+                    className="block pl-3 pr-4 py-2 text-base font-medium text-gray-900 hover:text-candy-pink hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    相册
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="block pl-3 pr-4 py-2 text-base font-medium text-gray-900 hover:text-candy-pink hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    管理后台
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </nav>
         <main className="container mx-auto px-4 py-8">{children}</main>
         <footer className="bg-white/70 backdrop-blur-sm shadow-lg rounded-t-2xl border border-white/20 mt-16 py-8">
