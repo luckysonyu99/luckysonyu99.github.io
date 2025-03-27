@@ -1,210 +1,296 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/components/AuthProvider';
-import { getSettings, updateSettings, type Settings } from '@/models/settings';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+
+interface Settings {
+  id: string;
+  site_name: string;
+  site_description: string;
+  logo_url: string;
+  social_links: {
+    github?: string;
+    twitter?: string;
+    instagram?: string;
+    bilibili?: string;
+    [key: string]: string | undefined;
+  };
+  contact_info: {
+    email?: string;
+    wechat?: string;
+    qq?: string;
+    [key: string]: string | undefined;
+  };
+}
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
-  const [settings, setSettings] = useState<Partial<Settings>>({
-    site_title: '',
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState<Settings>({
+    id: '',
+    site_name: '',
     site_description: '',
-    baby_name: '',
-    baby_birthday: '',
-    theme_color: 'pink',
-    email_notifications: false,
-    browser_notifications: false,
-    public_milestones: true,
-    public_photos: true
+    logo_url: '',
+    social_links: {},
+    contact_info: {},
   });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
-      fetchSettings();
-    }
-  }, [loading, user]);
+    fetchSettings();
+  }, []);
 
   const fetchSettings = async () => {
     try {
-      const data = await getSettings();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
       if (data) {
         setSettings(data);
+        setFormData(data);
       }
-    } catch (err) {
-      setError('获取设置失败');
-      console.error(err);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('settings')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('settings')
+        .getPublicUrl(fileName);
+
+      setFormData({ ...formData, logo_url: publicUrl });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSocialLinksChange = (platform: string, value: string) => {
+    setFormData({
+      ...formData,
+      social_links: {
+        ...formData.social_links,
+        [platform]: value,
+      },
+    });
+  };
+
+  const handleContactInfoChange = (type: string, value: string) => {
+    setFormData({
+      ...formData,
+      contact_info: {
+        ...formData.contact_info,
+        [type]: value,
+      },
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccess(false);
-
     try {
-      await updateSettings(settings);
-      setSuccess(true);
-    } catch (err) {
-      setError('保存设置失败');
-      console.error(err);
-    } finally {
-      setSaving(false);
+      if (settings) {
+        const { error } = await supabase
+          .from('settings')
+          .update(formData)
+          .eq('id', settings.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('settings')
+          .insert([formData]);
+
+        if (error) throw error;
+      }
+
+      await fetchSettings();
+      alert('设置已保存');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('保存设置时出错');
     }
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl text-gray-600 mb-4">请先登录</h1>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">网站设置</h1>
+    <div className="space-y-8">
+      <div className="flex items-center">
+        <h1 className="text-3xl font-qingke text-candy-purple">网站设置</h1>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
-          <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+      >
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-xl font-qingke text-candy-purple">基本信息</h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700">网站标题</label>
+              <label className="block text-gray-700 mb-2">网站名称</label>
               <input
                 type="text"
-                value={settings.site_title}
-                onChange={(e) => setSettings({ ...settings, site_title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
+                value={formData.site_name}
+                onChange={(e) => setFormData({ ...formData, site_name: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700">网站描述</label>
+              <label className="block text-gray-700 mb-2">网站描述</label>
               <textarea
-                value={settings.site_description}
-                onChange={(e) => setSettings({ ...settings, site_description: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-                rows={3}
+                value={formData.site_description}
+                onChange={(e) => setFormData({ ...formData, site_description: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                rows={4}
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700">宝宝名字</label>
-              <input
-                type="text"
-                value={settings.baby_name || ''}
-                onChange={(e) => setSettings({ ...settings, baby_name: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">宝宝生日</label>
-              <input
-                type="date"
-                value={settings.baby_birthday || ''}
-                onChange={(e) => setSettings({ ...settings, baby_birthday: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">主题颜色</label>
-              <select
-                value={settings.theme_color}
-                onChange={(e) => setSettings({ ...settings, theme_color: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              >
-                <option value="pink">粉色</option>
-                <option value="blue">蓝色</option>
-                <option value="purple">紫色</option>
-              </select>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center">
+              <label className="block text-gray-700 mb-2">Logo</label>
+              <div className="flex items-center space-x-4">
+                {formData.logo_url && (
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo预览"
+                    className="h-20 w-20 object-contain rounded-lg"
+                  />
+                )}
                 <input
-                  type="checkbox"
-                  checked={settings.email_notifications}
-                  onChange={(e) => setSettings({ ...settings, email_notifications: e.target.checked })}
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  disabled={uploading}
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  启用邮件通知
-                </label>
               </div>
+              {uploading && <p className="text-sm text-gray-500 mt-2">上传中...</p>}
+            </div>
+          </div>
 
-              <div className="flex items-center">
+          <div className="space-y-4">
+            <h2 className="text-xl font-qingke text-candy-purple">社交链接</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 mb-2">GitHub</label>
                 <input
-                  type="checkbox"
-                  checked={settings.browser_notifications}
-                  onChange={(e) => setSettings({ ...settings, browser_notifications: e.target.checked })}
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  type="url"
+                  value={formData.social_links.github || ''}
+                  onChange={(e) => handleSocialLinksChange('github', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="https://github.com/username"
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  启用浏览器通知
-                </label>
               </div>
-
-              <div className="flex items-center">
+              <div>
+                <label className="block text-gray-700 mb-2">Twitter</label>
                 <input
-                  type="checkbox"
-                  checked={settings.public_milestones}
-                  onChange={(e) => setSettings({ ...settings, public_milestones: e.target.checked })}
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  type="url"
+                  value={formData.social_links.twitter || ''}
+                  onChange={(e) => handleSocialLinksChange('twitter', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="https://twitter.com/username"
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  公开显示里程碑
-                </label>
               </div>
-
-              <div className="flex items-center">
+              <div>
+                <label className="block text-gray-700 mb-2">Instagram</label>
                 <input
-                  type="checkbox"
-                  checked={settings.public_photos}
-                  onChange={(e) => setSettings({ ...settings, public_photos: e.target.checked })}
-                  className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                  type="url"
+                  value={formData.social_links.instagram || ''}
+                  onChange={(e) => handleSocialLinksChange('instagram', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="https://instagram.com/username"
                 />
-                <label className="ml-2 block text-sm text-gray-900">
-                  公开显示相册
-                </label>
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">哔哩哔哩</label>
+                <input
+                  type="url"
+                  value={formData.social_links.bilibili || ''}
+                  onChange={(e) => handleSocialLinksChange('bilibili', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="https://space.bilibili.com/uid"
+                />
               </div>
             </div>
           </div>
 
-          {error && (
-            <div className="mt-4 text-red-600 text-sm">{error}</div>
-          )}
+          <div className="space-y-4">
+            <h2 className="text-xl font-qingke text-candy-purple">联系方式</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 mb-2">邮箱</label>
+                <input
+                  type="email"
+                  value={formData.contact_info.email || ''}
+                  onChange={(e) => handleContactInfoChange('email', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="your@email.com"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">微信</label>
+                <input
+                  type="text"
+                  value={formData.contact_info.wechat || ''}
+                  onChange={(e) => handleContactInfoChange('wechat', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="微信号"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">QQ</label>
+                <input
+                  type="text"
+                  value={formData.contact_info.qq || ''}
+                  onChange={(e) => handleContactInfoChange('qq', e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  placeholder="QQ号"
+                />
+              </div>
+            </div>
+          </div>
 
-          {success && (
-            <div className="mt-4 text-green-600 text-sm">设置已保存</div>
-          )}
-
-          <div className="mt-6">
+          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={saving}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50"
+              disabled={uploading}
+              className="px-6 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
             >
-              {saving ? '保存中...' : '保存设置'}
+              保存设置
             </button>
           </div>
         </form>
-      </div>
-    </main>
+      </motion.div>
+    </div>
   );
 } 

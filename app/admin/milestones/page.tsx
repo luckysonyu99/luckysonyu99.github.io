@@ -1,49 +1,107 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/components/AuthProvider';
-import { Milestone, getMilestones, createMilestone, updateMilestone, deleteMilestone } from '@/models/milestone';
 
-export default function MilestonesAdminPage() {
-  const { user, loading } = useAuth();
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+
+interface Milestone {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  category: string;
+  image_url?: string;
+}
+
+export default function MilestonesPage() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentMilestone, setCurrentMilestone] = useState<Partial<Milestone>>({
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
-    milestone_date: '',
-    category: ''
+    date: '',
+    category: '其他',
+    image_url: '',
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
-      fetchMilestones();
-    }
-  }, [loading, user]);
+    fetchMilestones();
+  }, []);
 
   const fetchMilestones = async () => {
     try {
-      const data = await getMilestones();
-      setMilestones(data);
+      const { data, error } = await supabase
+        .from('milestones')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setMilestones(data || []);
     } catch (error) {
       console.error('Error fetching milestones:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (isEditing && currentMilestone.id) {
-        await updateMilestone(currentMilestone.id, currentMilestone);
+      if (isEditing) {
+        const { error } = await supabase
+          .from('milestones')
+          .update(formData)
+          .eq('id', isEditing);
+
+        if (error) throw error;
       } else {
-        await createMilestone(currentMilestone as Omit<Milestone, 'id' | 'created_at' | 'updated_at'>);
+        const { error } = await supabase
+          .from('milestones')
+          .insert([formData]);
+
+        if (error) throw error;
       }
-      setCurrentMilestone({
+
+      setIsAdding(false);
+      setIsEditing(null);
+      setFormData({
         title: '',
         description: '',
-        milestone_date: '',
-        category: ''
+        date: '',
+        category: '其他',
+        image_url: '',
       });
-      setIsEditing(false);
       fetchMilestones();
     } catch (error) {
       console.error('Error saving milestone:', error);
@@ -51,141 +109,197 @@ export default function MilestonesAdminPage() {
   };
 
   const handleEdit = (milestone: Milestone) => {
-    setCurrentMilestone(milestone);
-    setIsEditing(true);
+    setIsEditing(milestone.id);
+    setFormData({
+      title: milestone.title,
+      description: milestone.description,
+      date: milestone.date,
+      category: milestone.category,
+      image_url: milestone.image_url || '',
+    });
+    setIsAdding(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('确定要删除这个里程碑吗？')) {
-      try {
-        await deleteMilestone(id);
-        fetchMilestones();
-      } catch (error) {
-        console.error('Error deleting milestone:', error);
-      }
+  const handleDelete = async (id: string) => {
+    if (!confirm('确定要删除这个里程碑吗？')) return;
+
+    try {
+      const { error } = await supabase
+        .from('milestones')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchMilestones();
+    } catch (error) {
+      console.error('Error deleting milestone:', error);
     }
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl text-gray-600 mb-4">请先登录</h1>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">里程碑管理</h1>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-qingke text-candy-purple">里程碑管理</h1>
+        <button
+          onClick={() => setIsAdding(true)}
+          className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
+        >
+          添加里程碑
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {isAdding && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">标题</label>
+              <label className="block text-gray-700 mb-2">标题</label>
               <input
                 type="text"
-                value={currentMilestone.title}
-                onChange={(e) => setCurrentMilestone({ ...currentMilestone, title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">日期</label>
+              <label className="block text-gray-700 mb-2">描述</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                rows={4}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">日期</label>
               <input
                 type="date"
-                value={currentMilestone.milestone_date}
-                onChange={(e) => setCurrentMilestone({ ...currentMilestone, milestone_date: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">类别</label>
-              <input
-                type="text"
-                value={currentMilestone.category}
-                onChange={(e) => setCurrentMilestone({ ...currentMilestone, category: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
+              <label className="block text-gray-700 mb-2">分类</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
-              />
+              >
+                <option value="其他">其他</option>
+                <option value="成长">成长</option>
+                <option value="学习">学习</option>
+                <option value="生活">生活</option>
+                <option value="有趣">有趣</option>
+              </select>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">描述</label>
-              <textarea
-                value={currentMilestone.description}
-                onChange={(e) => setCurrentMilestone({ ...currentMilestone, description: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-candy-pink focus:ring-candy-pink"
-                rows={3}
-                required
-              />
+            <div>
+              <label className="block text-gray-700 mb-2">图片</label>
+              <div className="flex items-center space-x-4">
+                {formData.image_url && (
+                  <img
+                    src={formData.image_url}
+                    alt="预览"
+                    className="h-20 w-20 object-cover rounded-lg"
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  disabled={uploading}
+                />
+              </div>
+              {uploading && <p className="text-sm text-gray-500 mt-2">上传中...</p>}
             </div>
-          </div>
-          <div className="mt-4 flex justify-end space-x-4">
-            {isEditing && (
+            <div className="flex justify-end space-x-4">
               <button
                 type="button"
                 onClick={() => {
-                  setIsEditing(false);
-                  setCurrentMilestone({
+                  setIsAdding(false);
+                  setIsEditing(null);
+                  setFormData({
                     title: '',
                     description: '',
-                    milestone_date: '',
-                    category: ''
+                    date: '',
+                    category: '其他',
+                    image_url: '',
                   });
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 取消
               </button>
-            )}
-            <button
-              type="submit"
-              className="px-4 py-2 bg-candy-pink text-white rounded-md hover:bg-candy-pink/90"
-            >
-              {isEditing ? '更新' : '添加'}
-            </button>
-          </div>
-        </form>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {milestones.map((milestone) => (
-            <div key={milestone.id} className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{milestone.title}</h3>
-              <p className="text-gray-600 mb-4">{milestone.description}</p>
-              <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                <span>{milestone.category}</span>
-                <span>{new Date(milestone.milestone_date).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => handleEdit(milestone)}
-                  className="text-candy-blue hover:text-candy-blue/80"
-                >
-                  编辑
-                </button>
-                <button
-                  onClick={() => handleDelete(milestone.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  删除
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={uploading}
+                className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
+              >
+                {isEditing ? '保存修改' : '添加里程碑'}
+              </button>
             </div>
-          ))}
-        </div>
+          </form>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {milestones.map((milestone, index) => (
+          <motion.div
+            key={milestone.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+          >
+            {milestone.image_url && (
+              <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                <img
+                  src={milestone.image_url}
+                  alt={milestone.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <h2 className="text-2xl font-qingke text-candy-purple mb-2">{milestone.title}</h2>
+            <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+              <span>{milestone.date}</span>
+              <span>·</span>
+              <span>{milestone.category}</span>
+            </div>
+            <p className="text-gray-700 mb-4">{milestone.description}</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => handleEdit(milestone)}
+                className="text-candy-blue hover:text-candy-purple transition-colors"
+              >
+                编辑
+              </button>
+              <button
+                onClick={() => handleDelete(milestone.id)}
+                className="text-red-500 hover:text-red-700 transition-colors"
+              >
+                删除
+              </button>
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </main>
+    </div>
   );
 } 
