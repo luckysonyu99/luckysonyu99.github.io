@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { useAuth } from '@/components/AuthProvider';
 
 const menuItems = [
   {
@@ -21,9 +21,9 @@ const menuItems = [
     icon: '📸',
   },
   {
-    title: '日常记录',
-    href: '/admin/records',
-    icon: '📝',
+    title: '设置',
+    href: '/admin/settings',
+    icon: '⚙️',
   },
 ];
 
@@ -33,10 +33,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' });
-  };
+  const { signOut } = useAuth();
 
   return (
     <div className="flex min-h-screen">
@@ -68,7 +65,7 @@ export default function AdminLayout({
 
           <div className="mt-8 pt-8 border-t border-gray-200">
             <button
-              onClick={handleSignOut}
+              onClick={() => signOut()}
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors w-full"
             >
               <span className="text-xl">👋</span>
