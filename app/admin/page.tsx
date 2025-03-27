@@ -10,16 +10,12 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('Admin page state:', { user, loading });
-    
     if (!loading && !user) {
-      console.log('No user found, redirecting to login...');
-      router.push('/login');
+      router.replace('/login');
     }
   }, [loading, user, router]);
 
   if (loading) {
-    console.log('Admin page loading...');
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
@@ -28,11 +24,9 @@ export default function AdminPage() {
   }
 
   if (!user) {
-    console.log('Admin page no user...');
     return null;
   }
 
-  console.log('Admin page rendering with user:', user);
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">管理面板 ⚙️</h1>
