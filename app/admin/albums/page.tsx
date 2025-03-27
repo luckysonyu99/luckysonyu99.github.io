@@ -20,6 +20,13 @@ export default function AlbumsPage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    cover_image: '',
+  });
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -80,6 +87,45 @@ export default function AlbumsPage() {
     fetchAlbums();
   }, [supabase]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('albums')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('albums')
+        .getPublicUrl(filePath);
+
+      if (isEditing && editingAlbum) {
+        setEditingAlbum({
+          ...editingAlbum,
+          cover_image: publicUrl,
+        });
+      } else {
+        setFormData({
+          ...formData,
+          cover_image: publicUrl,
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setError('图片上传失败');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleEdit = (album: Album) => {
     setEditingAlbum(album);
     setIsEditing(true);
@@ -104,6 +150,26 @@ export default function AlbumsPage() {
 
     setIsEditing(false);
     setEditingAlbum(null);
+  };
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('albums')
+        .insert([formData]);
+
+      if (error) throw error;
+
+      setIsAdding(false);
+      setFormData({
+        title: '',
+        description: '',
+        cover_image: '',
+      });
+    } catch (error) {
+      setError('添加相册失败');
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -153,106 +219,165 @@ export default function AlbumsPage() {
           </p>
         </motion.div>
 
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    标题
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    描述
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    封面图片
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {albums.map((album) => (
-                  <tr key={album.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEditing && editingAlbum?.id === album.id ? (
-                        <input
-                          type="text"
-                          value={editingAlbum.title}
-                          onChange={(e) =>
-                            setEditingAlbum({
-                              ...editingAlbum,
-                              title: e.target.value,
-                            })
-                          }
-                          className="border rounded px-2 py-1"
-                        />
-                      ) : (
-                        album.title
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {isEditing && editingAlbum?.id === album.id ? (
-                        <textarea
-                          value={editingAlbum.description}
-                          onChange={(e) =>
-                            setEditingAlbum({
-                              ...editingAlbum,
-                              description: e.target.value,
-                            })
-                          }
-                          className="border rounded px-2 py-1 w-full"
-                        />
-                      ) : (
-                        album.description
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEditing && editingAlbum?.id === album.id ? (
-                        <input
-                          type="text"
-                          value={editingAlbum.cover_image}
-                          onChange={(e) =>
-                            setEditingAlbum({
-                              ...editingAlbum,
-                              cover_image: e.target.value,
-                            })
-                          }
-                          className="border rounded px-2 py-1"
-                        />
-                      ) : (
-                        album.cover_image
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {isEditing && editingAlbum?.id === album.id ? (
-                        <button
-                          onClick={handleSave}
-                          className="text-green-600 hover:text-green-900 mr-2"
-                        >
-                          保存
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleEdit(album)}
-                          className="text-blue-600 hover:text-blue-900 mr-2"
-                        >
-                          编辑
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(album.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        删除
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="mb-8">
+          <button
+            onClick={() => setIsAdding(true)}
+            className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
+          >
+            添加相册
+          </button>
+        </div>
+
+        {isAdding && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg mb-8"
+          >
+            <form onSubmit={handleAdd} className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-2">标题</label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">描述</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">封面图片</label>
+                <div className="flex items-center space-x-4">
+                  {formData.cover_image && (
+                    <img
+                      src={formData.cover_image}
+                      alt="预览"
+                      className="h-20 w-20 object-cover rounded-lg"
+                    />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
+                    required
+                    disabled={uploading}
+                  />
+                </div>
+                {uploading && <p className="text-sm text-gray-500 mt-2">上传中...</p>}
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdding(false);
+                    setFormData({
+                      title: '',
+                      description: '',
+                      cover_image: '',
+                    });
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
+                >
+                  添加相册
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {albums.map((album, index) => (
+            <motion.div
+              key={album.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+            >
+              <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                <img
+                  src={album.cover_image}
+                  alt={album.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <h2 className="text-2xl font-qingke text-candy-purple mb-2">
+                {isEditing && editingAlbum?.id === album.id ? (
+                  <input
+                    type="text"
+                    value={editingAlbum.title}
+                    onChange={(e) =>
+                      setEditingAlbum({
+                        ...editingAlbum,
+                        title: e.target.value,
+                      })
+                    }
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  album.title
+                )}
+              </h2>
+              <p className="text-gray-700 mb-4">
+                {isEditing && editingAlbum?.id === album.id ? (
+                  <textarea
+                    value={editingAlbum.description}
+                    onChange={(e) =>
+                      setEditingAlbum({
+                        ...editingAlbum,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full px-2 py-1 border rounded"
+                    rows={3}
+                  />
+                ) : (
+                  album.description
+                )}
+              </p>
+              <div className="flex justify-end space-x-4">
+                {isEditing && editingAlbum?.id === album.id ? (
+                  <button
+                    onClick={handleSave}
+                    className="text-green-600 hover:text-green-900"
+                  >
+                    保存
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleEdit(album)}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    编辑
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(album.id)}
+                  className="text-red-600 hover:text-red-900"
+                >
+                  删除
+                </button>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </div>
