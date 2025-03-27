@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
@@ -11,7 +11,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    // 检查是否已经登录
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/admin');
+      }
+    };
+    checkSession();
+  }, [router, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,10 +41,23 @@ export default function LoginPage() {
       }
 
       if (data?.user) {
-        router.push('/admin');
+        // 验证用户是否是管理员
+        const { data: userData } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (!userData) {
+          throw new Error('您没有管理员权限');
+        }
+
+        // 获取重定向地址
+        const redirectTo = searchParams.get('redirectedFrom') || '/admin';
+        router.push(redirectTo);
       }
     } catch (error: any) {
-      setError('邮箱或密码错误');
+      setError(error.message || '邮箱或密码错误');
     } finally {
       setIsLoading(false);
     }

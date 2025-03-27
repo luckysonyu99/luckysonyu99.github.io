@@ -18,7 +18,9 @@ export async function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/admin')) {
     // 如果用户未登录，重定向到登录页面
     if (!session) {
-      return NextResponse.redirect(new URL('/admin/login', req.url));
+      const redirectUrl = new URL('/admin/login', req.url);
+      redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
     }
 
     // 验证用户是否是管理员
@@ -29,8 +31,8 @@ export async function middleware(req: NextRequest) {
       .single();
 
     if (!userData) {
-      // 如果不是管理员，重定向到首页
-      return NextResponse.redirect(new URL('/', req.url));
+      // 如果不是管理员，重定向到未授权页面
+      return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
     }
   }
 
@@ -42,6 +44,10 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+// 配置需要进行中间件处理的路径
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/admin/login',
+  ],
 }; 

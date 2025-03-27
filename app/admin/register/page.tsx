@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
@@ -10,8 +10,22 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFirstAdmin, setIsFirstAdmin] = useState(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    // 检查是否已经有管理员
+    const checkAdminExists = async () => {
+      const { data: adminUsers } = await supabase
+        .from('admin_users')
+        .select('*')
+        .limit(1);
+      
+      setIsFirstAdmin(!adminUsers || adminUsers.length === 0);
+    };
+    checkAdminExists();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +33,16 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      // 再次检查是否已经有管理员
+      const { data: adminUsers } = await supabase
+        .from('admin_users')
+        .select('*')
+        .limit(1);
+
+      if (adminUsers && adminUsers.length > 0) {
+        throw new Error('管理员账号已存在，无法注册');
+      }
+
       // 注册新用户
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -53,6 +77,60 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
+  if (!isFirstAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h2 className="mt-6 text-3xl font-qingke text-candy-purple">
+              注册已关闭
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              管理员账号已存在，无法注册新账号
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-white/20"
+          >
+            <div className="mb-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">注意</h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>此页面仅用于创建第一个管理员账号。管理员账号已存在，无法注册新账号。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <a
+                href="/admin/login"
+                className="inline-block px-6 py-3 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
+              >
+                返回登录
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 py-12 px-4 sm:px-6 lg:px-8">
@@ -143,7 +221,7 @@ export default function RegisterPage() {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  '创建账号'
+                  '注册'
                 )}
               </button>
             </div>
