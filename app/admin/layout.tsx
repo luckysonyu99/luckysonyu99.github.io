@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/auth';
 import AdminNav from '../components/AdminNav';
+import Navbar from '../components/Navbar';
 
 export default function AdminLayout({
   children,
@@ -47,9 +48,10 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <AdminNav />
-      <main className="p-4 md:p-6">{children}</main>
+      <main className="p-4 md:p-6 pt-24 md:pt-28">{children}</main>
     </div>
   );
 }
