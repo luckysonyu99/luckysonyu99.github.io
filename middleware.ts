@@ -29,12 +29,31 @@ export async function middleware(req: NextRequest) {
         // 验证用户是否是管理员
         const { data: userData, error: userError } = await supabase
           .from('admin_users')
-          .select('*')
+          .select('user_id, email')
           .eq('user_id', session.user.id)
           .single();
 
         if (userError) {
           console.error('Admin check error:', userError);
+          // 如果表不存在，创建表
+          if (userError.code === '42P01') {
+            const { error: createTableError } = await supabase.rpc('create_admin_users_table');
+            if (createTableError) {
+              console.error('Create table error:', createTableError);
+              return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
+            }
+            // 重试查询
+            const { data: retryData, error: retryError } = await supabase
+              .from('admin_users')
+              .select('user_id, email')
+              .eq('user_id', session.user.id)
+              .single();
+            
+            if (retryError || !retryData) {
+              return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
+            }
+            return res;
+          }
           return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
         }
 

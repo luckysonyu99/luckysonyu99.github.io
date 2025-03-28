@@ -1,149 +1,41 @@
--- 创建 admin_users 表
-CREATE TABLE IF NOT EXISTS admin_users (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+-- 1. 删除现有的表（如果存在）
+DROP TABLE IF EXISTS public.admin_users;
+
+-- 2. 创建新的 admin_users 表
+CREATE TABLE public.admin_users (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
     email TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'admin',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 创建索引
-CREATE INDEX IF NOT EXISTS admin_users_user_id_idx ON admin_users(user_id);
-CREATE INDEX IF NOT EXISTS admin_users_email_idx ON admin_users(email);
+-- 3. 创建索引
+CREATE INDEX admin_users_user_id_idx ON public.admin_users(user_id);
+CREATE INDEX admin_users_email_idx ON public.admin_users(email);
 
--- 创建 RLS 策略
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+-- 4. 启用 RLS
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
--- 允许所有已认证用户读取记录
-CREATE POLICY "Allow authenticated users to read admin users"
-    ON admin_users FOR SELECT
-    TO authenticated
-    USING (true);
-
--- 允许所有已认证用户插入记录
-CREATE POLICY "Allow authenticated users to insert admin users"
-    ON admin_users FOR INSERT
-    TO authenticated
-    WITH CHECK (true);
-
--- 允许所有已认证用户更新记录
-CREATE POLICY "Allow authenticated users to update admin users"
-    ON admin_users FOR UPDATE
+-- 5. 创建 RLS 策略
+CREATE POLICY "允许所有已认证用户访问 admin_users" ON public.admin_users
+    FOR ALL
     TO authenticated
     USING (true)
     WITH CHECK (true);
 
--- 允许所有已认证用户删除记录
-CREATE POLICY "Allow authenticated users to delete admin users"
-    ON admin_users FOR DELETE
-    TO authenticated
-    USING (true);
-
--- 创建函数用于添加管理员用户
-CREATE OR REPLACE FUNCTION add_admin_user(user_id UUID, email TEXT)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+-- 6. 添加管理员
+DO $$
+DECLARE
+    existing_user_id uuid;
 BEGIN
-    INSERT INTO admin_users (user_id, email, role)
-    VALUES (user_id, email, 'admin')
-    ON CONFLICT (user_id) DO NOTHING;
-END;
-$$;
+    -- 获取用户ID
+    SELECT id INTO existing_user_id 
+    FROM auth.users 
+    WHERE email = 'admin@luckysonyu99.me';
 
--- 创建函数用于检查用户是否是管理员
-CREATE OR REPLACE FUNCTION is_admin_user(user_id UUID)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM admin_users
-        WHERE admin_users.user_id = $1
-    );
-END;
-$$;
-
--- 创建函数用于创建 admin_users 表
-CREATE OR REPLACE FUNCTION create_admin_users_table()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-BEGIN
-    -- 创建 admin_users 表
-    CREATE TABLE IF NOT EXISTS admin_users (
-        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-        user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-        email TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'admin',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-    );
-
-    -- 创建索引
-    CREATE INDEX IF NOT EXISTS admin_users_user_id_idx ON admin_users(user_id);
-    CREATE INDEX IF NOT EXISTS admin_users_email_idx ON admin_users(email);
-
-    -- 启用 RLS
-    ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-
-    -- 删除现有策略
-    DROP POLICY IF EXISTS "Allow authenticated users to read admin users" ON admin_users;
-    DROP POLICY IF EXISTS "Allow authenticated users to insert admin users" ON admin_users;
-    DROP POLICY IF EXISTS "Allow authenticated users to update admin users" ON admin_users;
-    DROP POLICY IF EXISTS "Allow authenticated users to delete admin users" ON admin_users;
-
-    -- 创建新策略
-    CREATE POLICY "Allow authenticated users to read admin users"
-        ON admin_users FOR SELECT
-        TO authenticated
-        USING (true);
-
-    CREATE POLICY "Allow authenticated users to insert admin users"
-        ON admin_users FOR INSERT
-        TO authenticated
-        WITH CHECK (true);
-
-    CREATE POLICY "Allow authenticated users to update admin users"
-        ON admin_users FOR UPDATE
-        TO authenticated
-        USING (true)
-        WITH CHECK (true);
-
-    CREATE POLICY "Allow authenticated users to delete admin users"
-        ON admin_users FOR DELETE
-        TO authenticated
-        USING (true);
-
-    -- 创建函数用于添加管理员用户
-    CREATE OR REPLACE FUNCTION add_admin_user(user_id UUID, email TEXT)
-    RETURNS void
-    LANGUAGE plpgsql
-    SECURITY DEFINER
-    AS $$
-    BEGIN
-        INSERT INTO admin_users (user_id, email, role)
-        VALUES (user_id, email, 'admin')
-        ON CONFLICT (user_id) DO NOTHING;
-    END;
-    $$;
-
-    -- 创建函数用于检查用户是否是管理员
-    CREATE OR REPLACE FUNCTION is_admin_user(user_id UUID)
-    RETURNS boolean
-    LANGUAGE plpgsql
-    SECURITY DEFINER
-    AS $$
-    BEGIN
-        RETURN EXISTS (
-            SELECT 1 FROM admin_users
-            WHERE admin_users.user_id = $1
-        );
-    END;
-    $$;
-END;
-$$; 
+    -- 如果用户存在，添加为管理员
+    IF existing_user_id IS NOT NULL THEN
+        INSERT INTO admin_users (user_id, email, created_at)
+        VALUES (existing_user_id, 'admin@luckysonyu99.me', now());
+    END IF;
+END $$; 
