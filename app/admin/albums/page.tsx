@@ -93,15 +93,33 @@ export default function AlbumsPage() {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // 检查文件大小（限制为 5MB）
+      if (file.size > 5 * 1024 * 1024) {
+        setError('图片大小不能超过 5MB');
+        return;
+      }
+
+      // 检查文件类型
+      if (!file.type.startsWith('image/')) {
+        setError('只能上传图片文件');
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('albums')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('albums')
@@ -120,7 +138,7 @@ export default function AlbumsPage() {
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      setError('图片上传失败');
+      setError('图片上传失败，请重试');
     } finally {
       setUploading(false);
     }
@@ -134,32 +152,62 @@ export default function AlbumsPage() {
   const handleSave = async () => {
     if (!editingAlbum) return;
 
-    const { error } = await supabase
-      .from('albums')
-      .update({
-        title: editingAlbum.title,
-        description: editingAlbum.description,
-        cover_image: editingAlbum.cover_image,
-      })
-      .eq('id', editingAlbum.id);
+    try {
+      const { error } = await supabase
+        .from('albums')
+        .update({
+          title: editingAlbum.title,
+          description: editingAlbum.description,
+          cover_image: editingAlbum.cover_image,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingAlbum.id);
 
-    if (error) {
-      setError(error.message);
-      return;
+      if (error) {
+        console.error('Update error:', error);
+        setError('保存失败，请重试');
+        return;
+      }
+
+      // 更新本地状态
+      setAlbums(albums.map(album => 
+        album.id === editingAlbum.id ? editingAlbum : album
+      ));
+
+      setIsEditing(false);
+      setEditingAlbum(null);
+      setError('');
+    } catch (error) {
+      console.error('Save error:', error);
+      setError('保存失败，请重试');
     }
-
-    setIsEditing(false);
-    setEditingAlbum(null);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
-        .from('albums')
-        .insert([formData]);
+      if (!formData.title || !formData.description || !formData.cover_image) {
+        setError('请填写所有必填字段');
+        return;
+      }
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from('albums')
+        .insert([{
+          ...formData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
+
+      // 更新本地状态
+      setAlbums([data, ...albums]);
 
       setIsAdding(false);
       setFormData({
@@ -167,22 +215,34 @@ export default function AlbumsPage() {
         description: '',
         cover_image: '',
       });
+      setError('');
     } catch (error) {
-      setError('添加相册失败');
+      console.error('Add error:', error);
+      setError('添加相册失败，请重试');
     }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个相册吗？')) return;
 
-    const { error } = await supabase
-      .from('albums')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('albums')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      setError(error.message);
-      return;
+      if (error) {
+        console.error('Delete error:', error);
+        setError('删除失败，请重试');
+        return;
+      }
+
+      // 更新本地状态
+      setAlbums(albums.filter(album => album.id !== id));
+      setError('');
+    } catch (error) {
+      console.error('Delete error:', error);
+      setError('删除失败，请重试');
     }
   };
 
