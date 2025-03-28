@@ -22,8 +22,11 @@ export async function middleware(req: NextRequest) {
     if (req.nextUrl.pathname.startsWith('/admin')) {
       // 如果未登录，重定向到登录页面
       if (!session) {
+        console.log('No session found, redirecting to login');
         return NextResponse.redirect(new URL('/admin/login', req.url));
       }
+
+      console.log('Current user:', session.user);
 
       try {
         // 验证用户是否是管理员
@@ -32,6 +35,8 @@ export async function middleware(req: NextRequest) {
           .select('user_id, email')
           .eq('user_id', session.user.id)
           .single();
+
+        console.log('Admin check result:', { userData, userError });
 
         if (userError) {
           console.error('Admin check error:', userError);
@@ -59,6 +64,7 @@ export async function middleware(req: NextRequest) {
 
         // 如果不是管理员，重定向到未授权页面
         if (!userData) {
+          console.log('User not found in admin_users table:', session.user.id);
           return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
         }
 
