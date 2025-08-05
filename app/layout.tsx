@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
+import MobileNavbar from '../components/MobileNavbar';
 
 const zcoolKuaiLe = ZCOOL_KuaiLe({ 
   weight: '400',
@@ -35,8 +36,9 @@ export default function RootLayout({
     <html lang="zh" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
       <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
         <Navigation />
-        <main className="container mx-auto px-4 py-8">{children}</main>
+        <main className="container mx-auto px-4 py-8 pb-20 sm:pb-8">{children}</main>
         <Footer />
+        <MobileNavbar />
       </body>
     </html>
   );
