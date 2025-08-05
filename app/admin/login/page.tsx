@@ -13,40 +13,32 @@ function LoginContent() {
   const [showDefaultCredentials, setShowDefaultCredentials] = useState(false);
   const [adminExists, setAdminExists] = useState<boolean | null>(null);
   const [showUnauthorized, setShowUnauthorized] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const initializePage = async () => {
-      try {
-        // 检查是否已经登录
-        const { isAuthenticated } = await checkAuthStatus();
-        if (isAuthenticated) {
-          router.push('/admin');
-          return;
-        }
-
-        // 检查是否显示未授权提示
-        const unauthorized = searchParams.get("unauthorized");
-        if (unauthorized === "true" && !error) {
-          setShowUnauthorized(true);
-        }
-
-        // 检查管理员是否已存在
-        const exists = await checkAdminExists();
-        setAdminExists(exists);
-      } catch (error) {
-        console.error('初始化登录页面失败:', error);
-        // 如果检查失败，假设管理员不存在
-        setAdminExists(false);
-      } finally {
+    const checkInitialAuth = async () => {
+      const { isAuthenticated } = await checkAuthStatus();
+      if (isAuthenticated) {
+        router.push("/admin");
+      } else {
         setIsCheckingAuth(false);
       }
     };
+    checkInitialAuth();
+  }, [router]);
 
-    initializePage();
-  }, [router, searchParams, error]);
+  useEffect(() => {
+    if (!isCheckingAuth) {
+      const unauthorized = searchParams.get("unauthorized");
+      if (unauthorized === "true" && !error) {
+        setShowUnauthorized(true);
+      }
+      checkAdminExists().then(setAdminExists).catch(() => setAdminExists(false));
+    }
+  }, [isCheckingAuth, searchParams, error]);
 
   const handleCreateDefaultAdmin = async () => {
     setIsLoading(true);
@@ -76,19 +68,25 @@ function LoginContent() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSuccessMessage("");
     setShowUnauthorized(false);
 
     try {
       const result = await signIn(email, password);
       
       if (result.success) {
-        // 登录成功后跳转到admin页面
-        router.push("/admin");
+        // 登录成功提示
+        setSuccessMessage("欢迎爸爸妈妈！🎉👨‍👩‍👧‍👦");
+        // 延迟跳转，让用户看到成功提示
+        setTimeout(() => {
+          router.push("/admin");
+        }, 1500);
       } else {
-        setError(result.error || "邮箱或密码错误");
+        // 登录失败提示
+        setError("您已来到一个不属于你管理的地界！🚫 需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦 或者去找小恐龙 🦖 帮忙哦！");
       }
     } catch (error) {
-      setError("登录过程中发生错误，请重试");
+      setError("您已来到一个不属于你管理的地界！🚫 需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦 或者去找小恐龙 🦖 帮忙哦！");
     }
     
     setIsLoading(false);
@@ -217,6 +215,12 @@ function LoginContent() {
               </div>
             )}
 
+            {successMessage && (
+              <div className="text-sm text-center text-green-600">
+                {successMessage}
+              </div>
+            )}
+
             <div>
               <button
                 type="submit"
@@ -247,5 +251,7 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
+
 
 
