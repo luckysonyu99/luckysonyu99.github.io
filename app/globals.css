@@ -12,20 +12,32 @@
   --candy-yellow: #FFD700;
 }
 
-body {
-  @apply bg-white text-gray-900;
-  background: linear-gradient(135deg, rgba(255, 105, 180, 0.05) 0%, rgba(135, 206, 235, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%);
-  min-height: 100vh;
-  color: rgb(var(--foreground-rgb));
-}
-
 @layer base {
+  * {
+    @apply font-kuaile;
+  }
+  
+  html {
+    @apply font-kuaile;
+  }
+  
+  body {
+    @apply font-kuaile bg-white text-gray-900;
+    background: linear-gradient(135deg, rgba(255, 105, 180, 0.05) 0%, rgba(135, 206, 235, 0.05) 50%, rgba(255, 215, 0, 0.05) 100%);
+    min-height: 100vh;
+    color: rgb(var(--foreground-rgb));
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-qingke;
   }
 
-  body {
-    @apply bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5;
+  input, textarea, select, button {
+    @apply font-kuaile;
+  }
+
+  p, span, div, a, li, td, th {
+    @apply font-kuaile;
   }
 }
 

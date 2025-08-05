@@ -1,0 +1,153 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { checkAuthStatus, signOut } from '../../lib/auth';
+import AdminNav from '../components/AdminNav';
+import Navbar from '../components/Navbar';
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // 如果是登录页面，直接渲染子组件，不使用 admin layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+
+    // 验证认证状态
+    const verifyAuth = async () => {
+      try {
+        const { isAuthenticated, user } = await checkAuthStatus();
+        
+        if (isAuthenticated && user) {
+          setUser(user);
+        } else {
+          // 未登录，重定向到登录页面并带上未授权参数
+          router.push('/admin/login?unauthorized=true');
+          return;
+        }
+      } catch (error) {
+        console.error('认证验证失败:', error);
+        router.push('/admin/login?unauthorized=true');
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyAuth();
+  }, [pathname]); // 只依赖 pathname，不依赖 router
+
+  const handleSignOut = async () => {
+    try {
+      const result = await signOut();
+      if (result.success) {
+        router.push('/admin/login');
+      } else {
+        alert(`登出失败: ${result.error}`);
+      }
+    } catch (e) {
+      console.error('Error signing out:', e);
+      alert(`登出失败: ${(e as Error).message}`);
+    }
+  };
+
+  // 如果是登录页面，直接渲染子组件，不使用 admin layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  // 如果还在加载中，显示加载状态
+  if (isLoading || !isClient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-candy-pink mx-auto mb-4"></div>
+          <p className="text-gray-600">验证登录状态中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果没有用户信息，不渲染任何内容（应该已经重定向了）
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      {/* Admin 导航栏 */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-lg font-semibold text-gray-900">管理后台</h1>
+              <nav className="hidden md:flex space-x-8">
+                <a
+                  href="/admin"
+                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                    pathname === '/admin'
+                      ? 'text-candy-pink border-b-2 border-candy-pink'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  🏠 首页
+                </a>
+                <a
+                  href="/admin/milestones"
+                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                    pathname === '/admin/milestones'
+                      ? 'text-candy-pink border-b-2 border-candy-pink'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  🎯 里程碑
+                </a>
+                <a
+                  href="/admin/gallery"
+                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
+                    pathname === '/admin/gallery'
+                      ? 'text-candy-pink border-b-2 border-candy-pink'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  🖼️ 相册
+                </a>
+              </nav>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                欢迎，{user.username || 'admin'}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-candy-pink hover:bg-candy-purple focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-candy-pink"
+              >
+                登出
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="p-4 md:p-6 pt-6">{children}</main>
+    </div>
+  );
+}
+
