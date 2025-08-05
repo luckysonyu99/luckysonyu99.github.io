@@ -10,6 +10,7 @@ const zcoolKuaiLe = ZCOOL_KuaiLe({
   subsets: ['latin'],
   variable: '--font-kuaile',
   display: 'swap',
+  fallback: ['cursive', 'sans-serif'],
 });
 
 const zcoolQingKe = ZCOOL_QingKe_HuangYou({
@@ -17,6 +18,7 @@ const zcoolQingKe = ZCOOL_QingKe_HuangYou({
   subsets: ['latin'],
   variable: '--font-qingke',
   display: 'swap',
+  fallback: ['cursive', 'sans-serif'],
 });
 
 export const metadata: Metadata = {

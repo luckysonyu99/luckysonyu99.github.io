@@ -42,8 +42,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        kuaile: ['var(--font-kuaile)'],
-        qingke: ['var(--font-qingke)'],
+        kuaile: ['var(--font-kuaile)', 'cursive', 'sans-serif'],
+        qingke: ['var(--font-qingke)', 'cursive', 'sans-serif'],
       },
       animation: {
         'float': 'float 3s ease-in-out infinite',
