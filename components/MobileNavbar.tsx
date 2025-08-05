@@ -43,6 +43,13 @@ export default function MobileNavbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 sm:hidden">
       <div className="bg-white/95 backdrop-blur-md border-b border-pink-100 shadow-lg">
+        {/* 站点标识 */}
+        <div className="flex justify-center items-center py-2 border-b border-pink-100">
+          <Link href="/" className="text-lg font-bold text-pink-600 hover:text-pink-700 transition-colors font-qingke">
+            🦖 Luca
+          </Link>
+        </div>
+        
         <div className="flex justify-around items-center py-2 px-4">
           {navItems.map((item, index) => {
             const active = isActive(item.href) || (item.href === '/admin/login' && pathname.startsWith('/admin'));
