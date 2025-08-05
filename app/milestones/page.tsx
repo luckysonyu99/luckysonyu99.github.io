@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/auth';
+import userbase from 'userbase-js';
 
 interface Milestone {
-  id: string;
+  itemId: string;
   title: string;
   description: string;
   date: string;
@@ -17,24 +17,28 @@ export default function MilestonesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchMilestones();
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'milestones',
+          changeHandler: (items) => {
+            const milestonesData = items.map(item => ({ ...item.item, itemId: item.itemId } as Milestone));
+            // 按日期排序，最新的在前
+            milestonesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            setMilestones(milestonesData);
+            setIsLoading(false);
+          }
+        })
+        .catch((e) => {
+          console.error('Error opening milestones database:', e);
+          setIsLoading(false);
+        });
+      })
+      .catch((e) => {
+        console.error('Userbase 初始化失败:', e);
+        setIsLoading(false);
+      });
   }, []);
-
-  const fetchMilestones = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('milestones')
-        .select('*')
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-      setMilestones(data || []);
-    } catch (error) {
-      console.error('Error fetching milestones:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -58,7 +62,7 @@ export default function MilestonesPage() {
           <div className="space-y-12">
             {milestones.map((milestone, index) => (
               <motion.div
-                key={milestone.id}
+                key={milestone.itemId}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -116,4 +120,5 @@ export default function MilestonesPage() {
       </div>
     </div>
   );
-} 
+}
+

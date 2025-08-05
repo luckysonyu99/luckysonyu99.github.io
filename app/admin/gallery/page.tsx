@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/auth';
+import userbase from 'userbase-js';
 
 interface Photo {
-  id: string;
+  itemId?: string;
   title: string;
   description: string;
   image_url: string;
   category: string;
-  created_at: string;
 }
 
 export default function GalleryPage() {
@@ -27,24 +26,21 @@ export default function GalleryPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchPhotos();
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'photos',
+          changeHandler: (items) => {
+            setPhotos(items.map(item => item.item as Photo & { itemId: string }));
+            setIsLoading(false);
+          }
+        })
+        .catch((e) => console.error('Error opening photos database:', e));
+      })
+      .catch((e) => console.error('Userbase 初始化失败:', e));
   }, []);
 
-  const fetchPhotos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('*')
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setPhotos(data || []);
-    } catch (error) {
-      console.error('Error fetching photos:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -52,23 +48,37 @@ export default function GalleryPage() {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
 
-      const { error: uploadError } = await supabase.storage
-        .from('gallery')
-        .upload(filePath, file);
+        try {
+          const response = await fetch("https://luckysonyu99-github-io-git-main-luckysonyu99s-projects.vercel.app/api/upload-signed-cloudinary", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              imageBase64: base64data,
+            }),
+          });
 
-      if (uploadError) throw uploadError;
+          const data = await response.json();
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('gallery')
-        .getPublicUrl(filePath);
+          if (!response.ok) {
+            throw new Error(data.message || "Failed to upload image");
+          }
 
-      setFormData({ ...formData, image_url: publicUrl });
+          setFormData({ ...formData, image_url: data.imageUrl });
+        } catch (error) {
+          console.error("Error uploading image to Cloudinary:", error);
+          alert(`图片上传失败: ${(error as Error).message}`);
+        }
+      };
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error("Error handling image upload:", error);
+      alert(`图片上传失败: ${(error as Error).message}`);
     } finally {
       setUploading(false);
     }
@@ -78,18 +88,16 @@ export default function GalleryPage() {
     e.preventDefault();
     try {
       if (isEditing) {
-        const { error } = await supabase
-          .from('photos')
-          .update(formData)
-          .eq('id', isEditing);
-
-        if (error) throw error;
+        await userbase.updateItem({
+          databaseName: 'photos',
+          itemId: isEditing,
+          item: formData,
+        });
       } else {
-        const { error } = await supabase
-          .from('photos')
-          .insert([formData]);
-
-        if (error) throw error;
+        await userbase.insertItem({
+          databaseName: 'photos',
+          item: formData,
+        });
       }
 
       setIsAdding(false);
@@ -100,14 +108,15 @@ export default function GalleryPage() {
         image_url: '',
         category: '其他',
       });
-      fetchPhotos();
     } catch (error) {
       console.error('Error saving photo:', error);
+      alert(`保存照片失败: ${(error as Error).message}`);
     }
   };
 
   const handleEdit = (photo: Photo) => {
-    setIsEditing(photo.id);
+    if (!photo.itemId) return;
+    setIsEditing(photo.itemId);
     setFormData({
       title: photo.title,
       description: photo.description,
@@ -117,19 +126,17 @@ export default function GalleryPage() {
     setIsAdding(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除这张照片吗？')) return;
+  const handleDelete = async (itemId: string) => {
+    if (!confirm("确定要删除这张照片吗？")) return;
 
     try {
-      const { error } = await supabase
-        .from('photos')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      fetchPhotos();
+      await userbase.deleteItem({
+        databaseName: "photos",
+        itemId,
+      });
     } catch (error) {
-      console.error('Error deleting photo:', error);
+      console.error("Error deleting photo:", error);
+      alert(`删除照片失败: ${(error as Error).message}`);
     }
   };
 
@@ -248,7 +255,7 @@ export default function GalleryPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {photos.map((photo, index) => (
           <motion.div
-            key={photo.id}
+            key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -263,8 +270,6 @@ export default function GalleryPage() {
             </div>
             <h2 className="text-2xl font-qingke text-candy-purple mb-2">{photo.title}</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>{new Date(photo.created_at).toLocaleDateString()}</span>
-              <span>·</span>
               <span>{photo.category}</span>
             </div>
             <p className="text-gray-700 mb-4">{photo.description}</p>
@@ -276,7 +281,7 @@ export default function GalleryPage() {
                 编辑
               </button>
               <button
-                onClick={() => handleDelete(photo.id)}
+                onClick={() => photo.itemId && handleDelete(photo.itemId)}
                 className="text-red-500 hover:text-red-700 transition-colors"
               >
                 删除

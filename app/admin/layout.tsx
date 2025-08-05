@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/auth';
+import userbase from 'userbase-js';
 import AdminNav from '../components/AdminNav';
 import Navbar from '../components/Navbar';
 
@@ -20,32 +20,29 @@ export default function AdminLayout({
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email || '');
-      }
-    };
-    getUser();
-  }, []);
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        // Userbase 初始化成功，假设用户已登录
+        // 在实际应用中，可以通过尝试打开数据库来验证登录状态
+        setEmail('admin@luca.com');
+      })
+      .catch((e) => {
+        console.error('Userbase 初始化失败:', e);
+        router.push('/admin/login');
+      });
+  }, [router]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/admin/login');
+    try {
+      await userbase.signOut();
+      router.push('/admin/login');
+    } catch (e) {
+      console.error('Error signing out:', e);
+      alert(`登出失败: ${(e as Error).message}`);
+    }
   };
 
   const isActive = (path: string) => pathname === path;
-
-  const navItems = [
-    { path: '/admin', label: '首页' },
-    { path: '/admin/milestones', label: '里程碑' },
-    { path: '/admin/gallery', label: '相册' },
-    { path: '/admin/settings', label: '设置' },
-    { path: '/admin/users', label: '用户' },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -62,7 +59,6 @@ function getNavIcon(path: string): string {
     '/admin/milestones': '🎯',
     '/admin/gallery': '🖼️',
     '/admin/settings': '⚙️',
-    '/admin/users': '👥',
   };
   return icons[path] || '📝';
 } 

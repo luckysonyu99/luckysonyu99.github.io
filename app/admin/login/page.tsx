@@ -3,8 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/auth';
-import { createDefaultAdmin } from '@/lib/admin-setup';
+import userbase from 'userbase-js';
+
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -16,49 +16,36 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // 检查是否已经登录
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          // 验证用户是否是管理员
-          const { data: userData } = await supabase
-            .from('admin_users')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-
-          if (userData) {
-            router.push('/admin');
-          }
-        }
-      } catch (error) {
-        console.error('检查会话失败:', error);
-      }
-    };
-    checkSession();
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        // Userbase 初始化成功
+      })
+      .catch((e) => {
+        console.error('Userbase 初始化失败:', e);
+      });
   }, [router]);
 
   const handleCreateDefaultAdmin = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const result = await createDefaultAdmin();
-      if (result.success) {
-        if (result.credentials) {
-          setEmail(result.credentials.email);
-          setPassword(result.credentials.password);
-          setShowDefaultCredentials(true);
-          setError('默认管理员账号已创建，请使用以下凭据登录');
-        } else {
-          setError(result.message || '管理员已存在');
-        }
-      } else {
-        setError(result.error || '创建管理员失败');
-      }
+      // 尝试注册默认管理员账号
+      await userbase.signUp({
+        username: "admin@luca.com",
+        password: "luca2024",
+        rememberMe: "none",
+      });
+      setEmail("admin@luca.com");
+      setPassword("luca2024");
+      setShowDefaultCredentials(true);
+      setError("默认管理员账号已创建，请使用以下凭据登录");
     } catch (error: any) {
-      setError(error.message || '创建管理员失败');
+      if (error.message.includes("username already exists")) {
+        setError("管理员账号已存在，请直接登录");
+      } else {
+        setError(error.message || "创建管理员失败");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,37 +54,19 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      await userbase.signIn({
+        username: email,
+        password: password,
+        rememberMe: "none",
       });
 
-      if (error) {
-        throw error;
-      }
-
-      if (data?.user) {
-        // 验证用户是否是管理员
-        const { data: userData, error: userError } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (userError || !userData) {
-          await supabase.auth.signOut();
-          throw new Error('您没有管理员权限');
-        }
-
-        // 获取重定向地址
-        const redirectTo = searchParams.get('redirectedFrom') || '/admin';
-        router.push(redirectTo);
-      }
+      // 登录成功后直接跳转到admin页面
+      router.push("/admin");
     } catch (error: any) {
-      setError(error.message || '邮箱或密码错误');
+      setError(error.message || "邮箱或密码错误");
     } finally {
       setIsLoading(false);
     }

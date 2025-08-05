@@ -3,47 +3,46 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/auth';
+import userbase from 'userbase-js';
 
 interface Stats {
   milestones: number;
   photos: number;
-  users: number;
 }
 
 export default function AdminHomePage() {
   const router = useRouter();
-  const [stats, setStats] = useState<Stats>({ milestones: 0, photos: 0, users: 0 });
+  const [stats, setStats] = useState<Stats>({ milestones: 0, photos: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [milestonesCount, photosCount, usersCount] = await Promise.all([
-          supabase.from('milestones').select('*', { count: 'exact', head: true }),
-          supabase.from('photos').select('*', { count: 'exact', head: true }),
-          supabase.from('users').select('*', { count: 'exact', head: true }),
-        ]);
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'milestones',
+          changeHandler: (items) => {
+            setStats(prevStats => ({ ...prevStats, milestones: items.length }));
+          }
+        })
+        .catch((e) => console.error('Error opening milestones database:', e));
 
-        setStats({
-          milestones: milestonesCount.count || 0,
-          photos: photosCount.count || 0,
-          users: usersCount.count || 0,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        userbase.openDatabase({
+          databaseName: 'photos',
+          changeHandler: (items) => {
+            setStats(prevStats => ({ ...prevStats, photos: items.length }));
+          }
+        })
+        .catch((e) => console.error('Error opening photos database:', e));
 
-    fetchStats();
+      })
+      .catch((e) => console.error('Userbase 初始化失败:', e));
+
+    setLoading(false);
   }, []);
 
   const statCards = [
     { label: '里程碑', value: stats.milestones, icon: '🎯', color: 'from-pink-500 to-rose-500' },
     { label: '相册照片', value: stats.photos, icon: '🖼️', color: 'from-purple-500 to-indigo-500' },
-    { label: '用户数量', value: stats.users, icon: '👥', color: 'from-blue-500 to-cyan-500' },
   ];
 
   return (
@@ -113,7 +112,6 @@ export default function AdminHomePage() {
           {[
             { label: '添加里程碑', icon: '✨', path: '/admin/milestones' },
             { label: '上传照片', icon: '📸', path: '/admin/gallery' },
-            { label: '管理用户', icon: '👥', path: '/admin/users' },
             { label: '系统设置', icon: '⚙️', path: '/admin/settings' },
           ].map((action, index) => (
             <motion.button

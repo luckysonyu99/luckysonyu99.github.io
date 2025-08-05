@@ -1,15 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/auth';
+import userbase from 'userbase-js';
 
 interface Photo {
-  id: string;
+  itemId: string;
   title: string;
   description: string;
   image_url: string;
   category: string;
-  created_at: string;
 }
 
 export default function GalleryPage() {
@@ -18,24 +17,25 @@ export default function GalleryPage() {
   const [selectedCategory, setSelectedCategory] = useState('全部');
 
   useEffect(() => {
-    fetchPhotos();
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'photos',
+          changeHandler: (items) => {
+            setPhotos(items.map(item => ({ ...item.item, itemId: item.itemId } as Photo)));
+            setIsLoading(false);
+          }
+        })
+        .catch((e) => {
+          console.error('Error opening photos database:', e);
+          setIsLoading(false);
+        });
+      })
+      .catch((e) => {
+        console.error('Userbase 初始化失败:', e);
+        setIsLoading(false);
+      });
   }, []);
-
-  const fetchPhotos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPhotos(data || []);
-    } catch (error) {
-      console.error('Error fetching photos:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const categories = ['全部', '生活', '旅行', '美食', '风景', '其他'];
   const filteredPhotos = selectedCategory === '全部'
@@ -74,7 +74,7 @@ export default function GalleryPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredPhotos.map((photo, index) => (
           <motion.div
-            key={photo.id}
+            key={photo.itemId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -89,8 +89,6 @@ export default function GalleryPage() {
             </div>
             <h2 className="text-2xl font-qingke text-candy-purple mb-2">{photo.title}</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>{new Date(photo.created_at).toLocaleDateString()}</span>
-              <span>·</span>
               <span>{photo.category}</span>
             </div>
             <p className="text-gray-700">{photo.description}</p>
@@ -99,4 +97,5 @@ export default function GalleryPage() {
       </div>
     </div>
   );
-} 
+}
+
