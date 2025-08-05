@@ -41,8 +41,8 @@ export default function MobileNavbar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden">
-      <div className="bg-white/95 backdrop-blur-md border-t border-pink-100 shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 sm:hidden">
+      <div className="bg-white/95 backdrop-blur-md border-b border-pink-100 shadow-lg">
         <div className="flex justify-around items-center py-2 px-4">
           {navItems.map((item, index) => {
             const active = isActive(item.href) || (item.href === '/admin/login' && pathname.startsWith('/admin'));
@@ -54,12 +54,12 @@ export default function MobileNavbar() {
                 className="flex flex-col items-center justify-center min-w-0 flex-1"
               >
                 <motion.div
-                  initial={{ scale: 0.8 }}
+                  initial={{ scale: 1 }}
                   animate={{ 
-                    scale: active ? 1.1 : 0.9,
+                    scale: active ? 1.1 : 1,
                     y: active ? -2 : 0
                   }}
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ 
                     type: "spring", 
                     stiffness: 300, 
