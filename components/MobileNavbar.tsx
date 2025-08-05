@@ -99,7 +99,7 @@ export default function MobileNavbar() {
                   
                   {/* 文字标签 */}
                   <span className={`
-                    text-xs font-medium relative z-10 transition-all duration-300
+                    text-xs font-medium relative z-10 transition-all duration-300 font-kuaile
                     ${active ? 'font-semibold' : ''}
                   `}>
                     {item.label}

@@ -56,15 +56,15 @@ export default function GalleryPage() {
         <h1 className="text-3xl font-qingke text-candy-purple">相册</h1>
         <div className="flex space-x-2">
           {categories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedCategory === category
-                  ? 'bg-candy-pink text-white'
-                  : 'bg-white/80 text-gray-700 hover:bg-candy-pink/10'
-              }`}
-            >
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-lg transition-colors font-kuaile ${
+                  selectedCategory === category
+                    ? 'bg-candy-pink text-white'
+                    : 'bg-white/80 text-gray-700 hover:bg-candy-pink/10'
+                }`}
+              >
               {category}
             </button>
           ))}
