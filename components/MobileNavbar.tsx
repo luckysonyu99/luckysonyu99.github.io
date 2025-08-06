@@ -61,11 +61,12 @@ export default function MobileNavbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block transform transition-transform duration-200 active:scale-95 hover:scale-105"
+                  className="block"
                 >
                   <div
                     className={`
                       relative flex flex-col items-center justify-center p-2 rounded-xl min-w-[50px] min-h-[50px]
+                      transform transition-transform duration-200 active:scale-95 hover:scale-105
                       ${active 
                         ? `${item.bgColor} ${item.activeColor} shadow-md` 
                         : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
@@ -99,6 +100,8 @@ export default function MobileNavbar() {
     </nav>
   );
 }
+
+
 
 
 
