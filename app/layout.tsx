@@ -34,9 +34,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh" className={`${zcoolKuaiLe.variable} ${zcoolQingKe.variable}`}>
-      <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5">
+      <body className="font-kuaile min-h-screen bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-4 py-8 pb-16 sm:pb-8 pt-24 sm:pt-8">{children}</main>
+        <main className="container mx-auto px-4 py-8 pt-24 sm:pt-8 flex-1">{children}</main>
         <Footer />
         <MobileNavbar />
       </body>
