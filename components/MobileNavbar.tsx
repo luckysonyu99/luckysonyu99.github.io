@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -60,12 +61,11 @@ export default function MobileNavbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block"
+                  className="block transform transition-transform duration-200 active:scale-95 hover:scale-105"
                 >
                   <div
                     className={`
-                      relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 min-w-[50px] min-h-[50px]
-                      active:scale-95 hover:scale-105
+                      relative flex flex-col items-center justify-center p-2 rounded-xl min-w-[50px] min-h-[50px]
                       ${active 
                         ? `${item.bgColor} ${item.activeColor} shadow-md` 
                         : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
@@ -99,4 +99,6 @@ export default function MobileNavbar() {
     </nav>
   );
 }
+
+
 
