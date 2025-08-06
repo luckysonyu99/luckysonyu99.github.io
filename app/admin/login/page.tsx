@@ -20,14 +20,23 @@ function LoginContent() {
 
   useEffect(() => {
     const checkInitialAuth = async () => {
+      // 添加超时机制，避免长时间等待
+      const timeoutId = setTimeout(() => {
+        console.warn('认证检查超时，显示登录界面');
+        setIsCheckingAuth(false);
+      }, 5000); // 5秒超时
+
       try {
         const { isAuthenticated } = await checkAuthStatus();
+        clearTimeout(timeoutId);
+        
         if (isAuthenticated) {
           router.push("/admin");
         } else {
           setIsCheckingAuth(false);
         }
       } catch (error) {
+        clearTimeout(timeoutId);
         console.error('初始认证检查失败:', error);
         setIsCheckingAuth(false);
       }
@@ -103,7 +112,8 @@ function LoginContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 font-kuaile">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-candy-pink mx-auto mb-4"></div>
-          <p className="text-gray-600">检查登录状态中...</p>
+          <p className="text-gray-600 mb-2">检查登录状态中...</p>
+          <p className="text-xs text-gray-400">如果长时间无响应，请刷新页面</p>
         </div>
       </div>
     );

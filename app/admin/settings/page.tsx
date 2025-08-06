@@ -1,16 +1,61 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { signOut } from '../../../lib/auth';
 
 export default function SettingsPage() {
   const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [settings, setSettings] = useState({
+    siteTitle: "Luca's Growing Journey",
+    siteDescription: "记录宝宝成长的点点滴滴",
+    currentPassword: '',
+    newPassword: '',
+  });
 
   const handleLogout = async () => {
     await signOut();
     router.push('/admin/login');
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setSaveMessage('');
+    
+    try {
+      // 模拟保存设置的过程
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 这里可以添加实际的设置保存逻辑
+      // 例如保存到localStorage或数据库
+      
+      setSaveMessage('设置保存成功！');
+      
+      // 清除密码字段
+      setSettings(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+      }));
+      
+      // 3秒后清除成功消息
+      setTimeout(() => {
+        setSaveMessage('');
+      }, 3000);
+      
+    } catch (error) {
+      setSaveMessage('保存失败，请重试');
+      
+      // 3秒后清除错误消息
+      setTimeout(() => {
+        setSaveMessage('');
+      }, 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -32,7 +77,8 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">网站标题</label>
                 <input
                   type="text"
-                  defaultValue="Luca's Growing Journey"
+                  value={settings.siteTitle}
+                  onChange={(e) => setSettings(prev => ({ ...prev, siteTitle: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 />
               </div>
@@ -40,7 +86,8 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">网站描述</label>
                 <input
                   type="text"
-                  defaultValue="记录宝宝成长的点点滴滴"
+                  value={settings.siteDescription}
+                  onChange={(e) => setSettings(prev => ({ ...prev, siteDescription: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 />
               </div>
@@ -96,18 +143,48 @@ export default function SettingsPage() {
                   <input
                     type="password"
                     placeholder="当前密码"
+                    value={settings.currentPassword}
+                    onChange={(e) => setSettings(prev => ({ ...prev, currentPassword: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candy-pink"
                   />
                   <input
                     type="password"
                     placeholder="新密码"
+                    value={settings.newPassword}
+                    onChange={(e) => setSettings(prev => ({ ...prev, newPassword: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-candy-pink"
                   />
                 </div>
               </div>
+              
+              {/* 保存消息提示 */}
+              {saveMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  saveMessage.includes('成功') 
+                    ? 'bg-green-50 text-green-700 border border-green-200' 
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}>
+                  {saveMessage}
+                </div>
+              )}
+              
               <div className="flex space-x-4">
-                <button className="px-6 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-pink/80 transition-colors">
-                  保存设置
+                <button 
+                  onClick={handleSaveSettings}
+                  disabled={isSaving}
+                  className="px-6 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-pink/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>保存中...</span>
+                    </>
+                  ) : (
+                    '保存设置'
+                  )}
                 </button>
                 <button 
                   onClick={handleLogout}

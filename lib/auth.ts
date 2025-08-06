@@ -18,7 +18,11 @@ export const initUserbase = async () => {
 // 检查用户是否已登录
 export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; user?: any }> => {
   try {
-    await initUserbase();
+    const initSuccess = await initUserbase();
+    if (!initSuccess) {
+      console.warn('Userbase 初始化失败，认为用户未登录');
+      return { isAuthenticated: false };
+    }
     
     // 尝试打开一个数据库来验证用户是否已登录
     // 如果用户未登录，这个操作会失败
@@ -36,8 +40,11 @@ export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; use
         dbError.message.includes('User not signed in') ||
         dbError.message.includes('not signed in') ||
         dbError.message.includes('unauthorized') ||
-        dbError.message.includes('User not found')
+        dbError.message.includes('User not found') ||
+        dbError.message.includes('Network error') ||
+        dbError.message.includes('Failed to fetch')
       )) {
+        console.warn('用户未登录或网络错误:', dbError.message);
         return { isAuthenticated: false };
       }
       
