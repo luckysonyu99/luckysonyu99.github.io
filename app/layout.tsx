@@ -4,7 +4,6 @@ import type { Metadata } from 'next';
 import { ZCOOL_KuaiLe, ZCOOL_QingKe_HuangYou } from 'next/font/google';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import MobileNavbar from '../components/MobileNavbar';
 
 const zcoolKuaiLe = ZCOOL_KuaiLe({ 
   weight: '400',
@@ -38,7 +37,6 @@ export default function RootLayout({
         <Navigation />
         <main className="container mx-auto px-4 py-8 pt-24 sm:pt-8 flex-1">{children}</main>
         <Footer />
-        <MobileNavbar />
       </body>
     </html>
   );

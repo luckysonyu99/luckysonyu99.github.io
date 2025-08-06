@@ -111,9 +111,10 @@ export default function AdminHomePage() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           {[
-            { label: '添加里程碑', icon: '✨', path: '/admin/milestones' },
-            { label: '上传照片', icon: '📸', path: '/admin/gallery' },
+            { label: '里程碑管理', icon: '✨', path: '/admin/milestones' },
+            { label: '相册管理', icon: '📸', path: '/admin/gallery' },
             { label: '系统设置', icon: '⚙️', path: '/admin/settings' },
+            { label: '返回前台', icon: '🏠', path: '/' },
           ].map((action, index) => (
             <motion.button
               key={action.label}

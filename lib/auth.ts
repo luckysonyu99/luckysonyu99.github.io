@@ -35,12 +35,14 @@ export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; use
       if (dbError.message && (
         dbError.message.includes('User not signed in') ||
         dbError.message.includes('not signed in') ||
-        dbError.message.includes('unauthorized')
+        dbError.message.includes('unauthorized') ||
+        dbError.message.includes('User not found')
       )) {
         return { isAuthenticated: false };
       }
       
       // 其他错误也认为未登录
+      console.warn('数据库访问错误，认为用户未登录:', dbError.message);
       return { isAuthenticated: false };
     }
   } catch (error) {

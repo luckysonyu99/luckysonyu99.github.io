@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IoMenu, IoClose } from 'react-icons/io5';
-import { FaHome, FaImages, FaBookmark, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa';
+import { FaHome, FaImages, FaBookmark, FaCog, FaArrowLeft } from 'react-icons/fa';
 
 const AdminNav = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +11,9 @@ const AdminNav = () => {
 
   const navItems = [
     { href: '/admin', label: '管理首页', icon: FaHome },
-    { href: '/admin/albums', label: '相册管理', icon: FaImages },
+    { href: '/admin/gallery', label: '相册管理', icon: FaImages },
     { href: '/admin/milestones', label: '里程碑管理', icon: FaBookmark },
-    { href: '/admin/logout', label: '退出登录', icon: FaSignOutAlt },
+    { href: '/admin/settings', label: '系统设置', icon: FaCog },
   ];
 
   const isActive = (path: string) => pathname === path;

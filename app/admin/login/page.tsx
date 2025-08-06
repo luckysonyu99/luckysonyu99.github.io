@@ -20,15 +20,20 @@ function LoginContent() {
 
   useEffect(() => {
     const checkInitialAuth = async () => {
-      const { isAuthenticated } = await checkAuthStatus();
-      if (isAuthenticated) {
-        router.push("/admin");
-      } else {
+      try {
+        const { isAuthenticated } = await checkAuthStatus();
+        if (isAuthenticated) {
+          router.push("/admin");
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (error) {
+        console.error('初始认证检查失败:', error);
         setIsCheckingAuth(false);
       }
     };
     checkInitialAuth();
-  }, [router]);
+  }, []); // 移除 router 依赖，避免无限循环
 
   useEffect(() => {
     if (!isCheckingAuth) {

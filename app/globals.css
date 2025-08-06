@@ -200,4 +200,15 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* 移动端导航栏样式优化 */
+  @media (max-width: 640px) {
+    .mobile-nav-item {
+      @apply transition-all duration-200 ease-in-out;
+    }
+    
+    .mobile-nav-item:active {
+      @apply scale-95;
+    }
+  }
 } 
