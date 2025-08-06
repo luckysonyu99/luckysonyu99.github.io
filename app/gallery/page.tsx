@@ -95,7 +95,6 @@ export default function GalleryPage() {
           </motion.div>
         ))}
       </div>
-
     </div>
   );
 }

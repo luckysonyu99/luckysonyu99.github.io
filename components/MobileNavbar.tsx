@@ -51,7 +51,7 @@ export default function MobileNavbar() {
         </div>
         
         <div className="flex justify-around items-center py-2 px-4">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const active = isActive(item.href) || (item.href === '/admin/login' && pathname.startsWith('/admin'));
             
             return (
