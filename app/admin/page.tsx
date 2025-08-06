@@ -1,42 +1,133 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { checkAuthStatus } from '../../lib/auth';
+import userbase from 'userbase-js';
 
-export default function AdminPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { isAuthenticated } = await checkAuthStatus();
-      if (!isAuthenticated) {
-        router.push('/admin/login?unauthorized=true');
-      } else {
-        // 如果已认证，可以重定向到默认的管理页面，例如 /admin/dashboard 或 /admin/settings
-        // 这里我们暂时重定向到 /admin/settings，因为这是用户之前访问的页面
-        router.push('/admin/settings');
-      }
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 font-kuaile">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-candy-pink mx-auto mb-4"></div>
-          <p className="text-gray-600">检查登录状态中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return null; // 或者显示一个简单的加载指示器
+interface Stats {
+  milestones: number;
+  photos: number;
 }
 
+export default function AdminHomePage() {
+  const router = useRouter();
+  const [stats, setStats] = useState<Stats>({ milestones: 0, photos: 0 });
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'milestones',
+          changeHandler: (items) => {
+            setStats(prevStats => ({ ...prevStats, milestones: items.length }));
+          }
+        })
+        .catch((e) => console.error('Error opening milestones database:', e));
+
+        userbase.openDatabase({
+          databaseName: 'photos',
+          changeHandler: (items) => {
+            setStats(prevStats => ({ ...prevStats, photos: items.length }));
+          }
+        })
+        .catch((e) => console.error('Error opening photos database:', e));
+
+      })
+      .catch((e) => console.error('Userbase 初始化失败:', e));
+
+    setLoading(false);
+  }, []);
+
+  const statCards = [
+    { label: '里程碑', value: stats.milestones, icon: '🎯', color: 'from-pink-500 to-rose-500' },
+    { label: '相册照片', value: stats.photos, icon: '🖼️', color: 'from-purple-500 to-indigo-500' },
+  ];
+
+  return (
+    <div className="space-y-6 lg:space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center space-x-4"
+      >
+        <span className="text-3xl lg:text-4xl">👋</span>
+        <h1 className="text-2xl lg:text-3xl font-qingke text-candy-purple">
+          欢迎回来！
+        </h1>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {statCards.map((card, index) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ scale: 1.05 }}
+            className={`bg-gradient-to-br ${card.color} p-4 lg:p-6 rounded-2xl shadow-lg text-white`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-3xl lg:text-4xl mb-2">{card.icon}</div>
+                <h2 className="text-base lg:text-lg font-medium opacity-90">{card.label}</h2>
+                <div className="text-2xl lg:text-3xl font-bold mt-2">
+                  {loading ? (
+                    <div className="animate-pulse bg-white/20 h-6 lg:h-8 w-12 lg:w-16 rounded" />
+                  ) : (
+                    card.value
+                  )}
+                </div>
+              </div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 260,
+                  damping: 20,
+                  delay: 0.5 + index * 0.1
+                }}
+                className="text-4xl lg:text-6xl opacity-25"
+              >
+                {card.icon}
+              </motion.div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="bg-white/80 backdrop-blur-sm p-4 lg:p-6 rounded-2xl shadow-lg"
+      >
+        <div className="flex items-center space-x-3 mb-4">
+          <span className="text-xl lg:text-2xl">💡</span>
+          <h2 className="text-lg lg:text-xl font-medium text-gray-800">快捷操作</h2>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          {[
+            { label: '添加里程碑', icon: '✨', path: '/admin/milestones' },
+            { label: '上传照片', icon: '📸', path: '/admin/gallery' },
+            { label: '系统设置', icon: '⚙️', path: '/admin/settings' },
+          ].map((action, index) => (
+            <motion.button
+              key={action.label}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push(action.path)}
+              className="flex items-center space-x-2 lg:space-x-3 p-3 lg:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-xl lg:text-2xl">{action.icon}</span>
+              <span className="font-medium text-sm lg:text-base text-gray-700">{action.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
