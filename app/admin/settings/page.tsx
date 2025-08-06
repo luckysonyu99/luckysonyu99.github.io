@@ -1,45 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { signOut } from '../../../lib/auth';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // 检查认证状态
-    const checkAuth = () => {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      if (!isLoggedIn) {
-        router.push('/admin/login');
-        return;
-      }
-      setIsAuthenticated(true);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
+  const handleLogout = async () => {
+    await signOut();
     router.push('/admin/login');
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-candy-pink"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="space-y-8">
