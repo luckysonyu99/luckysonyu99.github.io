@@ -95,7 +95,7 @@ export default function GalleryPage() {
           </motion.div>
         ))}
       </div>
-      <div className="h-20 sm:h-0"></div> {/* Add extra space for mobile navbar */}
+
     </div>
   );
 }

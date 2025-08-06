@@ -44,7 +44,7 @@ export default function MobileNavbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 sm:hidden">
       <div className="bg-white/95 backdrop-blur-md border-b border-pink-100 shadow-lg">
         {/* 站点标识 */}
-        <div className="flex justify-center items-center py-2 border-b border-pink-100">
+        <div className="flex justify-between items-center py-2 px-4 border-b border-pink-100">
           <Link href="/" className="text-lg font-bold text-pink-600 hover:text-pink-700 transition-colors font-qingke">
             🦖 Luca
           </Link>
