@@ -3,7 +3,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { checkAuthStatus, signIn, createDefaultAdmin, checkAdminExists } from '../../../lib/auth';
+import { useAuth } from '../../contexts/AuthContext';
+import { createDefaultAdmin, checkAdminExists } from '../../../lib/auth';
 
 function LoginContent() {
   const [email, setEmail] = useState('');
@@ -14,45 +15,27 @@ function LoginContent() {
   const [adminExists, setAdminExists] = useState<boolean | null>(null);
   const [showUnauthorized, setShowUnauthorized] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
 
+  // 如果已认证，重定向到管理后台
   useEffect(() => {
-    const checkInitialAuth = async () => {
-      // 添加超时机制，避免长时间等待
-      const timeoutId = setTimeout(() => {
-        console.warn('认证检查超时，显示登录界面');
-        setIsCheckingAuth(false);
-      }, 5000); // 5秒超时
+    if (isAuthenticated && !authLoading) {
+      router.push("/admin");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
-      try {
-        const { isAuthenticated } = await checkAuthStatus();
-        clearTimeout(timeoutId);
-        
-        if (isAuthenticated) {
-          router.push("/admin");
-        } else {
-          setIsCheckingAuth(false);
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        console.error('初始认证检查失败:', error);
-        setIsCheckingAuth(false);
-      }
-    };
-    checkInitialAuth();
-  }, []); // 移除 router 依赖，避免无限循环
-
+  // 处理未授权访问和检查管理员是否存在
   useEffect(() => {
-    if (!isCheckingAuth) {
+    if (!authLoading) {
       const unauthorized = searchParams.get("unauthorized");
       if (unauthorized === "true" && !error) {
         setShowUnauthorized(true);
       }
       checkAdminExists().then(setAdminExists).catch(() => setAdminExists(false));
     }
-  }, [isCheckingAuth, searchParams, error]);
+  }, [authLoading, searchParams, error]);
 
   const handleCreateDefaultAdmin = async () => {
     setIsLoading(true);
@@ -86,7 +69,7 @@ function LoginContent() {
     setShowUnauthorized(false);
 
     try {
-      const result = await signIn(email, password);
+      const result = await login(email, password);
       
       if (result.success) {
         // 登录成功提示
@@ -107,7 +90,7 @@ function LoginContent() {
   };
 
   // 如果正在检查认证状态，显示加载
-  if (isCheckingAuth) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 font-kuaile">
         <div className="text-center">

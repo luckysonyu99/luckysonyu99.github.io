@@ -1,20 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { signOut } from '../../../lib/auth';
+import { 
+  SiteSettings, 
+  loadSettingsFromStorage, 
+  saveSettingsToDatabase, 
+  applyTheme,
+  updateSiteMetadata 
+} from '../../../lib/settings';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SiteSettings>({
     siteTitle: "Luca's Growing Journey",
     siteDescription: "记录宝宝成长的点点滴滴",
+    theme: 'pink-purple',
     currentPassword: '',
     newPassword: '',
   });
+
+  // 加载设置
+  useEffect(() => {
+    const loadSettings = () => {
+      const storedSettings = loadSettingsFromStorage();
+      setSettings(prev => ({ ...prev, ...storedSettings }));
+    };
+    loadSettings();
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -26,22 +43,31 @@ export default function SettingsPage() {
     setSaveMessage('');
     
     try {
-      // 模拟保存设置的过程
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 保存设置到数据库
+      const success = await saveSettingsToDatabase({
+        siteTitle: settings.siteTitle,
+        siteDescription: settings.siteDescription,
+        theme: settings.theme,
+      });
       
-      // 这里可以添加实际的设置保存逻辑
-      // 例如保存到localStorage或数据库
+      if (success) {
+        // 应用设置
+        updateSiteMetadata(settings.siteTitle, settings.siteDescription);
+        applyTheme(settings.theme);
+        
+        setSaveMessage('设置保存成功！');
+        
+        // 清除密码字段
+        setSettings(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+        }));
+      } else {
+        setSaveMessage('保存失败，请重试');
+      }
       
-      setSaveMessage('设置保存成功！');
-      
-      // 清除密码字段
-      setSettings(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-      }));
-      
-      // 3秒后清除成功消息
+      // 3秒后清除消息
       setTimeout(() => {
         setSaveMessage('');
       }, 3000);
@@ -56,6 +82,11 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleThemeChange = (theme: SiteSettings['theme']) => {
+    setSettings(prev => ({ ...prev, theme }));
+    applyTheme(theme);
   };
 
   return (
@@ -98,22 +129,25 @@ export default function SettingsPage() {
           <div className="border-b border-pink-100 pb-6">
             <h2 className="text-xl font-qingke text-candy-blue mb-4">主题设置</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-candy-pink to-candy-purple rounded-lg mx-auto mb-2"></div>
-                <span className="text-sm text-gray-600">粉紫渐变</span>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-candy-blue to-candy-yellow rounded-lg mx-auto mb-2"></div>
-                <span className="text-sm text-gray-600">蓝黄渐变</span>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg mx-auto mb-2"></div>
-                <span className="text-sm text-gray-600">绿蓝渐变</span>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-lg mx-auto mb-2"></div>
-                <span className="text-sm text-gray-600">紫粉渐变</span>
-              </div>
+              {[
+                { theme: 'pink-purple' as const, name: '粉紫渐变', gradient: 'from-candy-pink to-candy-purple' },
+                { theme: 'blue-yellow' as const, name: '蓝黄渐变', gradient: 'from-candy-blue to-candy-yellow' },
+                { theme: 'green-blue' as const, name: '绿蓝渐变', gradient: 'from-green-400 to-blue-500' },
+                { theme: 'purple-pink' as const, name: '紫粉渐变', gradient: 'from-purple-400 to-pink-400' }
+              ].map((themeOption) => (
+                <button
+                  key={themeOption.theme}
+                  onClick={() => handleThemeChange(themeOption.theme)}
+                  className={`text-center p-2 rounded-lg transition-all ${
+                    settings.theme === themeOption.theme 
+                      ? 'ring-2 ring-candy-pink bg-candy-pink/10' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-16 h-16 bg-gradient-to-br ${themeOption.gradient} rounded-lg mx-auto mb-2`}></div>
+                  <span className="text-sm text-gray-600">{themeOption.name}</span>
+                </button>
+              ))}
             </div>
           </div>
 

@@ -4,6 +4,10 @@ import userbase from 'userbase-js';
 
 const USERBASE_APP_ID = '0b2844f0-e722-4251-a270-35200be9756a';
 
+// 认证状态缓存
+let authCache: { isAuthenticated: boolean; user?: any; timestamp: number } | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+
 // 初始化 Userbase
 export const initUserbase = async () => {
   try {
@@ -17,10 +21,17 @@ export const initUserbase = async () => {
 
 // 检查用户是否已登录
 export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; user?: any }> => {
+  // 检查缓存是否有效
+  if (authCache && (Date.now() - authCache.timestamp) < CACHE_DURATION) {
+    console.log('使用认证缓存');
+    return { isAuthenticated: authCache.isAuthenticated, user: authCache.user };
+  }
+
   try {
     const initSuccess = await initUserbase();
     if (!initSuccess) {
       console.warn('Userbase 初始化失败，认为用户未登录');
+      authCache = { isAuthenticated: false, timestamp: Date.now() };
       return { isAuthenticated: false };
     }
     
@@ -33,7 +44,9 @@ export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; use
       });
       
       // 如果能成功打开数据库，说明用户已登录
-      return { isAuthenticated: true, user: { username: 'admin@luca.com' } };
+      const result = { isAuthenticated: true, user: { username: 'admin@luca.com' } };
+      authCache = { ...result, timestamp: Date.now() };
+      return result;
     } catch (dbError: any) {
       // 如果打开数据库失败，检查是否是因为未登录
       if (dbError.message && (
@@ -45,17 +58,25 @@ export const checkAuthStatus = async (): Promise<{ isAuthenticated: boolean; use
         dbError.message.includes('Failed to fetch')
       )) {
         console.warn('用户未登录或网络错误:', dbError.message);
+        authCache = { isAuthenticated: false, timestamp: Date.now() };
         return { isAuthenticated: false };
       }
       
       // 其他错误也认为未登录
       console.warn('数据库访问错误，认为用户未登录:', dbError.message);
+      authCache = { isAuthenticated: false, timestamp: Date.now() };
       return { isAuthenticated: false };
     }
   } catch (error) {
     console.error('检查认证状态失败:', error);
+    authCache = { isAuthenticated: false, timestamp: Date.now() };
     return { isAuthenticated: false };
   }
+};
+
+// 清除认证缓存
+export const clearAuthCache = () => {
+  authCache = null;
 };
 
 // 登录
@@ -68,6 +89,9 @@ export const signIn = async (username: string, password: string) => {
       password,
       rememberMe: 'local', // 使用本地存储记住登录状态
     });
+    
+    // 登录成功后清除缓存，强制重新检查
+    clearAuthCache();
     
     return { success: true, user: result };
   } catch (error: any) {
@@ -98,6 +122,8 @@ export const signUp = async (username: string, password: string) => {
 export const signOut = async () => {
   try {
     await userbase.signOut();
+    // 登出后清除缓存
+    clearAuthCache();
     return { success: true };
   } catch (error: any) {
     console.error('登出失败:', error);
