@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import userbase from 'userbase-js';
+import { supabase } from '@/lib/supabase';
 
 interface Milestone {
-  itemId: string;
+  id: string;
   title: string;
   description: string;
   date: string;
@@ -17,28 +17,24 @@ export default function MilestonesPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
-      .then(() => {
-        userbase.openDatabase({
-          databaseName: 'milestones',
-          changeHandler: (items) => {
-            const milestonesData = items.map(item => ({ ...item.item, itemId: item.itemId } as Milestone));
-            // 按日期排序，最新的在前
-            milestonesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setMilestones(milestonesData);
-            setIsLoading(false);
-          }
-        })
-        .catch((e) => {
-          console.error('Error opening milestones database:', e);
-          setIsLoading(false);
-        });
-      })
-      .catch((e) => {
-        console.error('Userbase 初始化失败:', e);
-        setIsLoading(false);
-      });
+    fetchMilestones();
   }, []);
+
+  const fetchMilestones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('milestones')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setMilestones(data || []);
+    } catch (error) {
+      console.error('获取里程碑失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -49,76 +45,55 @@ export default function MilestonesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-blue-50 to-yellow-50 py-12">
-      <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-qingke text-center text-candy-purple mb-4">成长里程碑 🌱</h1>
-        <p className="text-center text-gray-600 mb-12">记录每一个精彩瞬间 ✨</p>
-        
-        <div className="relative max-w-4xl mx-auto">
-          {/* 成长树装饰 */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-candy-pink via-candy-blue to-candy-purple"></div>
-          
-          {/* 里程碑列表 */}
-          <div className="space-y-12">
-            {milestones.map((milestone, index) => (
-              <motion.div
-                key={milestone.itemId}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative flex items-center ${
-                  index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
-                }`}
-              >
-                {/* 时间轴节点 */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 bg-white rounded-full border-4 border-candy-pink shadow-lg flex items-center justify-center">
-                  <span className="text-candy-pink text-sm">🌱</span>
-                </div>
+    <div className="space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-4xl md:text-5xl font-qingke text-candy-purple mb-4">
+          ✨ 成长里程碑
+        </h1>
+        <p className="text-gray-600">记录每一个重要时刻</p>
+      </motion.div>
 
-                {/* 里程碑卡片 */}
-                <div className={`w-1/2 ${
-                  index % 2 === 0 ? 'pr-8' : 'pl-8'
-                }`}>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all"
-                  >
-                    <div className="flex items-center mb-4">
-                      <span className="text-2xl mr-2">✨</span>
-                      <h2 className="text-xl font-qingke text-candy-purple">{milestone.title}</h2>
-                    </div>
-                    
-                    {milestone.image_url && (
-                      <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
-                        <img
-                          src={milestone.image_url}
-                          alt={milestone.title}
-                          className="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    
-                    <p className="text-gray-700 mb-4 whitespace-pre-wrap">{milestone.description}</p>
-                    
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="flex items-center">
-                        <span className="mr-1">📅</span>
-                        {new Date(milestone.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* 底部装饰 */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 w-16 h-16 bg-white rounded-full border-4 border-candy-pink shadow-lg flex items-center justify-center">
-            <span className="text-2xl">🌳</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {milestones.map((milestone, index) => (
+          <motion.div
+            key={milestone.id}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ scale: 1.05 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all"
+          >
+            <div className="relative h-48">
+              <img
+                src={milestone.image_url}
+                alt={milestone.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-6">
+              <h2 className="text-2xl font-qingke text-candy-purple mb-2">{milestone.title}</h2>
+              <p className="text-sm text-gray-500 mb-3">
+                📅 {new Date(milestone.date).toLocaleDateString('zh-CN', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+              <p className="text-gray-700">{milestone.description}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
+
+      {milestones.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          暂无里程碑记录
+        </div>
+      )}
     </div>
   );
 }
-

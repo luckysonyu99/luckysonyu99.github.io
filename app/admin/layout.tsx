@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     // 如果当前路径是登录页面，不需要检查认证
-    if (pathname === '/admin/login') {
+    if (pathname === '/admin/login' || pathname === '/admin/login/') {
       return;
     }
 
@@ -22,8 +22,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isLoading, isAuthenticated, pathname, router]);
 
-  // 如果是登录页面，直接渲染子组件
-  if (pathname === '/admin/login') {
+  // 如果是登录页面，直接渲染子组件，不做任何检查
+  if (pathname === '/admin/login' || pathname === '/admin/login/') {
     return <>{children}</>;
   }
 
@@ -39,9 +39,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // 如果未认证，不渲染任何内容（因为会重定向）
+  // 如果未认证，显示加载（等待重定向）
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-candy-pink/5 via-candy-blue/5 to-candy-yellow/5 font-kuaile">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-candy-pink mx-auto mb-4"></div>
+          <p className="text-gray-600">正在跳转到登录页面...</p>
+        </div>
+      </div>
+    );
   }
 
   // 如果已认证，渲染管理后台布局

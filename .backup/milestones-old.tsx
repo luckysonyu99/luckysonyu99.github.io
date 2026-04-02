@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import userbase from 'userbase-js';
 import { useRouter } from 'next/navigation';
 
 interface Milestone {
-  id?: string;
+  itemId?: string;
   title: string;
   description: string;
   date: string;
@@ -27,25 +27,25 @@ export default function MilestonesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchMilestones();
-  }, []);
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        // 监听里程碑数据变化
+        userbase.openDatabase({
+          databaseName: 'milestones',
+          changeHandler: (items) => {
+            setMilestones(items.map(item => item.item as Milestone));
+            setIsLoading(false);
+          }
+        })
+        .catch((e) => console.error('Error opening milestones database:', e));
+      })
+      .catch((e) => {
+        console.error('Userbase 初始化失败:', e);
+        router.push('/admin/login');
+      });
+  }, [router]);
 
-  const fetchMilestones = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('milestones')
-        .select('*')
-        .order('date', { ascending: false });
 
-      if (error) throw error;
-
-      setMilestones(data || []);
-    } catch (error) {
-      console.error('获取里程碑失败:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -93,21 +93,18 @@ export default function MilestonesPage() {
     e.preventDefault();
     try {
       if (isEditing) {
-        const { error } = await supabase
-          .from('milestones')
-          .update(formData)
-          .eq('id', isEditing);
-
-        if (error) throw error;
+        await userbase.updateItem({
+          databaseName: 'milestones',
+          itemId: isEditing,
+          item: formData,
+        });
       } else {
-        const { error } = await supabase
-          .from('milestones')
-          .insert([formData]);
-
-        if (error) throw error;
+        await userbase.insertItem({
+          databaseName: 'milestones',
+          item: formData,
+        });
       }
 
-      await fetchMilestones();
       setIsAdding(false);
       setIsEditing(null);
       setFormData({
@@ -123,8 +120,8 @@ export default function MilestonesPage() {
   };
 
   const handleEdit = (milestone: Milestone) => {
-    if (!milestone.id) return;
-    setIsEditing(milestone.id);
+    if (!milestone.itemId) return;
+    setIsEditing(milestone.itemId);
     setFormData({
       title: milestone.title,
       description: milestone.description,
@@ -134,18 +131,14 @@ export default function MilestonesPage() {
     setIsAdding(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (itemId: string) => {
     if (!confirm("确定要删除这个里程碑吗？")) return;
 
     try {
-      const { error } = await supabase
-        .from('milestones')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await fetchMilestones();
+      await userbase.deleteItem({
+        databaseName: "milestones",
+        itemId,
+      });
     } catch (error) {
       console.error("Error deleting milestone:", error);
       alert(`删除里程碑失败: ${(error as Error).message}`);
@@ -262,7 +255,7 @@ export default function MilestonesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {milestones.map((milestone, index) => (
           <motion.div
-            key={milestone.id}
+            key={milestone.itemId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -288,7 +281,7 @@ export default function MilestonesPage() {
                 编辑
               </button>
               <button
-                onClick={() => milestone.id && handleDelete(milestone.id)}
+                onClick={() => milestone.itemId && handleDelete(milestone.itemId)}
                 className="text-red-500 hover:text-red-700 transition-colors"
               >
                 删除
@@ -299,4 +292,4 @@ export default function MilestonesPage() {
       </div>
     </div>
   );
-}
+} 

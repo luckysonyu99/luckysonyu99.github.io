@@ -1,51 +1,46 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import userbase from 'userbase-js';
 
-interface Milestone {
-  id?: string;
+interface Photo {
+  itemId?: string;
   title: string;
   description: string;
-  date: string;
   image_url: string;
+  category: string;
 }
 
-export default function MilestonesPage() {
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
+export default function GalleryPage() {
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
     image_url: '',
+    category: '其他',
   });
-  const router = useRouter();
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchMilestones();
+    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
+      .then(() => {
+        userbase.openDatabase({
+          databaseName: 'photos',
+          changeHandler: (items) => {
+            setPhotos(items.map(item => item.item as Photo & { itemId: string }));
+            setIsLoading(false);
+          }
+        })
+        .catch((e) => console.error('Error opening photos database:', e));
+      })
+      .catch((e) => console.error('Userbase 初始化失败:', e));
   }, []);
 
-  const fetchMilestones = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('milestones')
-        .select('*')
-        .order('date', { ascending: false });
 
-      if (error) throw error;
-
-      setMilestones(data || []);
-    } catch (error) {
-      console.error('获取里程碑失败:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -93,62 +88,55 @@ export default function MilestonesPage() {
     e.preventDefault();
     try {
       if (isEditing) {
-        const { error } = await supabase
-          .from('milestones')
-          .update(formData)
-          .eq('id', isEditing);
-
-        if (error) throw error;
+        await userbase.updateItem({
+          databaseName: 'photos',
+          itemId: isEditing,
+          item: formData,
+        });
       } else {
-        const { error } = await supabase
-          .from('milestones')
-          .insert([formData]);
-
-        if (error) throw error;
+        await userbase.insertItem({
+          databaseName: 'photos',
+          item: formData,
+        });
       }
 
-      await fetchMilestones();
       setIsAdding(false);
       setIsEditing(null);
       setFormData({
         title: '',
         description: '',
-        date: '',
         image_url: '',
+        category: '其他',
       });
     } catch (error) {
-      console.error('Error saving milestone:', error);
-      alert(`保存里程碑失败: ${(error as Error).message}`);
+      console.error('Error saving photo:', error);
+      alert(`保存照片失败: ${(error as Error).message}`);
     }
   };
 
-  const handleEdit = (milestone: Milestone) => {
-    if (!milestone.id) return;
-    setIsEditing(milestone.id);
+  const handleEdit = (photo: Photo) => {
+    if (!photo.itemId) return;
+    setIsEditing(photo.itemId);
     setFormData({
-      title: milestone.title,
-      description: milestone.description,
-      date: milestone.date,
-      image_url: milestone.image_url,
+      title: photo.title,
+      description: photo.description,
+      image_url: photo.image_url,
+      category: photo.category,
     });
     setIsAdding(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个里程碑吗？")) return;
+  const handleDelete = async (itemId: string) => {
+    if (!confirm("确定要删除这张照片吗？")) return;
 
     try {
-      const { error } = await supabase
-        .from('milestones')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await fetchMilestones();
+      await userbase.deleteItem({
+        databaseName: "photos",
+        itemId,
+      });
     } catch (error) {
-      console.error("Error deleting milestone:", error);
-      alert(`删除里程碑失败: ${(error as Error).message}`);
+      console.error("Error deleting photo:", error);
+      alert(`删除照片失败: ${(error as Error).message}`);
     }
   };
 
@@ -163,12 +151,12 @@ export default function MilestonesPage() {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-qingke text-candy-purple">里程碑管理</h1>
+        <h1 className="text-3xl font-qingke text-candy-purple">相册管理</h1>
         <button
           onClick={() => setIsAdding(true)}
           className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors"
         >
-          添加里程碑
+          添加照片
         </button>
       </div>
 
@@ -200,17 +188,22 @@ export default function MilestonesPage() {
               />
             </div>
             <div>
-              <label className="block text-gray-700 mb-2">日期</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              <label className="block text-gray-700 mb-2">分类</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
                 required
-              />
+              >
+                <option value="其他">其他</option>
+                <option value="生活">生活</option>
+                <option value="旅行">旅行</option>
+                <option value="美食">美食</option>
+                <option value="风景">风景</option>
+              </select>
             </div>
             <div>
-              <label className="block text-gray-700 mb-2">图片</label>
+              <label className="block text-gray-700 mb-2">照片</label>
               <div className="flex items-center space-x-4">
                 {formData.image_url && (
                   <img
@@ -224,7 +217,7 @@ export default function MilestonesPage() {
                   accept="image/*"
                   onChange={handleImageUpload}
                   className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-candy-pink"
-                  required={false}
+                  required={!isEditing}
                   disabled={uploading}
                 />
               </div>
@@ -239,8 +232,8 @@ export default function MilestonesPage() {
                   setFormData({
                     title: '',
                     description: '',
-                    date: '',
                     image_url: '',
+                    category: '其他',
                   });
                 }}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800"
@@ -252,7 +245,7 @@ export default function MilestonesPage() {
                 disabled={uploading}
                 className="px-4 py-2 bg-candy-pink text-white rounded-lg hover:bg-candy-purple transition-colors disabled:opacity-50"
               >
-                {isEditing ? '保存修改' : '添加里程碑'}
+                {isEditing ? '保存修改' : '添加照片'}
               </button>
             </div>
           </form>
@@ -260,9 +253,9 @@ export default function MilestonesPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {milestones.map((milestone, index) => (
+        {photos.map((photo, index) => (
           <motion.div
-            key={milestone.id}
+            key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -270,25 +263,25 @@ export default function MilestonesPage() {
           >
             <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
               <img
-                src={milestone.image_url}
-                alt={milestone.title}
+                src={photo.image_url}
+                alt={photo.title}
                 className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
-            <h2 className="text-2xl font-qingke text-candy-purple mb-2">{milestone.title}</h2>
+            <h2 className="text-2xl font-qingke text-candy-purple mb-2">{photo.title}</h2>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <span>{new Date(milestone.date).toLocaleDateString()}</span>
+              <span>{photo.category}</span>
             </div>
-            <p className="text-gray-700 mb-4">{milestone.description}</p>
+            <p className="text-gray-700 mb-4">{photo.description}</p>
             <div className="flex justify-end space-x-4">
               <button
-                onClick={() => handleEdit(milestone)}
+                onClick={() => handleEdit(photo)}
                 className="text-candy-blue hover:text-candy-purple transition-colors"
               >
                 编辑
               </button>
               <button
-                onClick={() => milestone.id && handleDelete(milestone.id)}
+                onClick={() => photo.itemId && handleDelete(photo.itemId)}
                 className="text-red-500 hover:text-red-700 transition-colors"
               >
                 删除
@@ -299,4 +292,4 @@ export default function MilestonesPage() {
       </div>
     </div>
   );
-}
+} 

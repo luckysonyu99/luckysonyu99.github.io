@@ -1,7 +1,5 @@
 'use client';
 
-import userbase from 'userbase-js';
-
 export interface SiteSettings {
   siteTitle: string;
   siteDescription: string;
@@ -41,61 +39,18 @@ export const saveSettingsToStorage = (settings: Partial<SiteSettings>): void => 
   }
 };
 
-// 从数据库加载设置
+// 从数据库加载设置（已弃用，使用 localStorage）
 export const loadSettingsFromDatabase = async (): Promise<SiteSettings> => {
-  try {
-    await userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' });
-    
-    const { items } = await userbase.openDatabase({
-      databaseName: 'settings',
-      changeHandler: () => {}
-    });
-    
-    if (items.length > 0) {
-      const dbSettings = items[0].item as SiteSettings;
-      return { ...DEFAULT_SETTINGS, ...dbSettings };
-    }
-  } catch (error) {
-    console.error('从数据库加载设置失败:', error);
-  }
-  
-  return DEFAULT_SETTINGS;
+  return loadSettingsFromStorage();
 };
 
-// 保存设置到数据库
+// 保存设置到数据库（已弃用，使用 localStorage）
 export const saveSettingsToDatabase = async (settings: Partial<SiteSettings>): Promise<boolean> => {
   try {
-    await userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' });
-    
-    const { items } = await userbase.openDatabase({
-      databaseName: 'settings',
-      changeHandler: () => {}
-    });
-    
-    const currentSettings = loadSettingsFromStorage();
-    const newSettings = { ...currentSettings, ...settings };
-    
-    if (items.length > 0) {
-      // 更新现有设置
-      await userbase.updateItem({
-        databaseName: 'settings',
-        itemId: items[0].itemId,
-        item: newSettings,
-      });
-    } else {
-      // 创建新设置
-      await userbase.insertItem({
-        databaseName: 'settings',
-        item: newSettings,
-      });
-    }
-    
-    // 同时保存到localStorage
-    saveSettingsToStorage(newSettings);
-    
+    saveSettingsToStorage(settings);
     return true;
   } catch (error) {
-    console.error('保存设置到数据库失败:', error);
+    console.error('保存设置失败:', error);
     return false;
   }
 };

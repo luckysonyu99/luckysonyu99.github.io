@@ -6,6 +6,7 @@ import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import { AuthProvider } from './contexts/AuthContext';
 import SettingsInitializer from './components/SettingsInitializer';
+import AgePeriodSwitcher from '../components/AgePeriodSwitcher';
 
 const zcoolKuaiLe = ZCOOL_KuaiLe({ 
   weight: '400',
@@ -39,6 +40,7 @@ export default function RootLayout({
         <AuthProvider>
           <SettingsInitializer />
           <Navigation />
+          <AgePeriodSwitcher />
           <main className="container mx-auto px-4 py-8 pt-24 sm:pt-8 flex-1">{children}</main>
           <Footer />
         </AuthProvider>

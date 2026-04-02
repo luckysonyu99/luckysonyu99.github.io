@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { createDefaultAdmin, checkAdminExists } from '../../../lib/auth';
+import { supabase } from '@/lib/supabase';
 
 function LoginContent() {
   const [email, setEmail] = useState('');
@@ -68,25 +69,46 @@ function LoginContent() {
     setSuccessMessage("");
     setShowUnauthorized(false);
 
-    try {
-      const result = await login(email, password);
-      
-      if (result.success) {
-        // 登录成功提示
-        setSuccessMessage("欢迎爸爸妈妈！🎉👨‍👩‍👧‍👦");
-        // 延迟跳转，让用户看到成功提示
-        setTimeout(() => {
-          router.push("/admin");
-        }, 1500);
-      } else {
-        // 登录失败提示
-        setError("您已来到一个不属于你管理的地界！🚫 需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦 或者去找小恐龙 🦖 帮忙哦！");
+    const result = await login(email, password);
+
+    if (result.success) {
+      // 获取用户信息以显示个性化欢迎语
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from('admin_profiles')
+          .select('role, relationship, full_name')
+          .eq('id', user.id)
+          .single();
+
+        let welcomeMessage = "欢迎回来！🎉";
+
+        if (profile) {
+          switch (profile.role) {
+            case 'admin':
+              welcomeMessage = "欢迎爸爸妈妈！👨‍👩‍👧‍👦 正在跳转...";
+              break;
+            case 'family':
+              const name = profile.relationship || profile.full_name || '家人';
+              welcomeMessage = `欢迎${name}！👴👵 正在跳转...`;
+              break;
+            case 'friend':
+              welcomeMessage = "欢迎朋友！👋 正在跳转...";
+              break;
+            case 'visitor':
+              welcomeMessage = "欢迎访客！🙋 正在跳转...";
+              break;
+          }
+        }
+
+        setSuccessMessage(welcomeMessage);
       }
-    } catch (error) {
+      // 保持 loading 状态直到重定向完成
+    } else {
       setError("您已来到一个不属于你管理的地界！🚫 需要授权请联系粑粑麻麻 👨‍👩‍👧‍👦 或者去找小恐龙 🦖 帮忙哦！");
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   // 如果正在检查认证状态，显示加载

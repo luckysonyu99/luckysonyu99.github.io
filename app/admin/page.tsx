@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import userbase from 'userbase-js';
+import { supabase } from '@/lib/supabase';
 
 interface Stats {
   milestones: number;
@@ -17,28 +17,38 @@ export default function AdminHomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    userbase.init({ appId: '0b2844f0-e722-4251-a270-35200be9756a' })
-      .then(() => {
-        userbase.openDatabase({
-          databaseName: 'milestones',
-          changeHandler: (items) => {
-            setStats(prevStats => ({ ...prevStats, milestones: items.length }));
-          }
-        })
-        .catch((e) => console.error('Error opening milestones database:', e));
+    const fetchStats = async () => {
+      try {
+        // 获取里程碑数量
+        const { count: milestonesCount, error: milestonesError } = await supabase
+          .from('milestones')
+          .select('*', { count: 'exact', head: true });
 
-        userbase.openDatabase({
-          databaseName: 'photos',
-          changeHandler: (items) => {
-            setStats(prevStats => ({ ...prevStats, photos: items.length }));
-          }
-        })
-        .catch((e) => console.error('Error opening photos database:', e));
+        if (milestonesError) {
+          console.error('获取里程碑数量失败:', milestonesError);
+        }
 
-      })
-      .catch((e) => console.error('Userbase 初始化失败:', e));
+        // 获取照片数量
+        const { count: photosCount, error: photosError } = await supabase
+          .from('photos')
+          .select('*', { count: 'exact', head: true });
 
-    setLoading(false);
+        if (photosError) {
+          console.error('获取照片数量失败:', photosError);
+        }
+
+        setStats({
+          milestones: milestonesCount || 0,
+          photos: photosCount || 0,
+        });
+      } catch (error) {
+        console.error('获取统计数据失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const statCards = [
@@ -113,6 +123,7 @@ export default function AdminHomePage() {
           {[
             { label: '里程碑管理', icon: '✨', path: '/admin/milestones' },
             { label: '相册管理', icon: '📸', path: '/admin/gallery' },
+            { label: '用户管理', icon: '👥', path: '/admin/users' },
             { label: '系统设置', icon: '⚙️', path: '/admin/settings' },
             { label: '返回前台', icon: '🏠', path: '/' },
           ].map((action, index) => (
