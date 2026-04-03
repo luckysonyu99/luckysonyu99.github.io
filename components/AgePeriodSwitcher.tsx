@@ -2,40 +2,24 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function AgePeriodSwitcher() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const [isHovered, setIsHovered] = useState(false);
 
-  const periods = [
-    {
-      id: 'preschool',
-      name: '学前时期',
-      age: '0-3岁',
-      icon: '🦖',
-      color: 'from-pink-500 to-purple-500',
-      path: '/',
-    },
-    {
-      id: 'kindergarten',
-      name: '幼儿园时期',
-      age: '3-6岁',
-      icon: '⚡',
-      color: 'from-red-500 to-blue-500',
-      path: '/kindergarten',
-    },
-  ];
+  const isKindergarten = pathname?.startsWith('/kindergarten');
 
-  const handleSwitch = (path: string) => {
-    setIsOpen(false);
+  const handleSwitch = () => {
+    const targetPath = isKindergarten ? '/' : '/kindergarten';
 
-    // 添加页面过渡动画
+    // 页面过渡动画
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.5s ease-in-out';
 
     setTimeout(() => {
-      router.push(path);
+      router.push(targetPath);
       setTimeout(() => {
         document.body.style.opacity = '1';
       }, 100);
@@ -43,63 +27,110 @@ export default function AgePeriodSwitcher() {
   };
 
   return (
-    <div className="fixed top-24 right-6 z-40">
-      {/* 切换按钮 */}
+    <div className="fixed bottom-8 right-8 z-50">
       <motion.button
+        onClick={handleSwitch}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
         whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 rounded-full bg-gradient-to-br from-candy-pink to-candy-purple shadow-lg flex items-center justify-center text-2xl"
+        whileTap={{ scale: 0.95 }}
+        className="relative group"
       >
-        🔄
-      </motion.button>
+        {/* 主按钮 */}
+        <div className={`relative w-24 h-24 rounded-full shadow-2xl flex items-center justify-center text-5xl transition-all duration-300 ${
+          isKindergarten
+            ? 'bg-gradient-to-br from-red-500 via-blue-500 to-yellow-500'
+            : 'bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400'
+        }`}>
+          {isKindergarten ? (
+            // 奥特曼形象
+            <motion.div
+              animate={{
+                rotate: isHovered ? [0, -10, 10, -10, 0] : 0,
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              ⚡
+            </motion.div>
+          ) : (
+            // 汪汪队/小恐龙形象
+            <motion.div
+              animate={{
+                y: isHovered ? [-2, 2, -2] : 0,
+              }}
+              transition={{ duration: 0.6, repeat: isHovered ? Infinity : 0 }}
+            >
+              🦖
+            </motion.div>
+          )}
+        </div>
 
-      {/* 选择面板 */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: 20, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 20, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-            className="absolute top-16 right-0 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-4 w-64"
-          >
-            <h3 className="text-sm font-bold text-gray-800 mb-3 text-center">
-              切换年龄段
-            </h3>
+        {/* 能量光环效果 */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1.5, opacity: 0 }}
+              exit={{ scale: 2, opacity: 0 }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className={`absolute inset-0 rounded-full ${
+                isKindergarten
+                  ? 'border-4 border-red-400'
+                  : 'border-4 border-pink-400'
+              }`}
+            />
+          )}
+        </AnimatePresence>
 
-            <div className="space-y-2">
-              {periods.map((period) => (
-                <motion.button
-                  key={period.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleSwitch(period.path)}
-                  className={`w-full p-3 rounded-xl bg-gradient-to-r ${period.color} text-white flex items-center justify-between`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl">{period.icon}</span>
-                    <div className="text-left">
-                      <div className="font-bold text-sm">{period.name}</div>
-                      <div className="text-xs opacity-90">{period.age}</div>
-                    </div>
-                  </div>
-                  <span className="text-xl">→</span>
-                </motion.button>
-              ))}
-            </div>
+        {/* 提示文字 */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="absolute right-28 top-1/2 -translate-y-1/2 whitespace-nowrap"
+            >
+              <div className={`px-6 py-3 rounded-2xl shadow-xl font-bold text-white ${
+                isKindergarten
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-500'
+                  : 'bg-gradient-to-r from-red-500 to-blue-500'
+              }`}>
+                {isKindergarten ? (
+                  <span>回到学前时期 🦖</span>
+                ) : (
+                  <span>进入幼儿园时期 ⚡</span>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            <div className="mt-3 text-center">
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                关闭
-              </button>
-            </div>
-          </motion.div>
+        {/* 装饰粒子 */}
+        {isHovered && (
+          <>
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0, x: 0, y: 0 }}
+                animate={{
+                  scale: [0, 1, 0],
+                  x: Math.cos((i * Math.PI * 2) / 6) * 40,
+                  y: Math.sin((i * Math.PI * 2) / 6) * 40,
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  delay: i * 0.1,
+                }}
+                className={`absolute top-1/2 left-1/2 w-2 h-2 rounded-full ${
+                  isKindergarten ? 'bg-yellow-400' : 'bg-pink-400'
+                }`}
+              />
+            ))}
+          </>
         )}
-      </AnimatePresence>
+      </motion.button>
     </div>
   );
 }

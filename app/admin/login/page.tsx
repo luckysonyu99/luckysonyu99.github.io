@@ -43,10 +43,10 @@ function LoginContent() {
     setError("");
 
     const result = await createDefaultAdmin();
-    
+
     if (result.success) {
-      setEmail("admin@luca.com");
-      setPassword("luca2024");
+      setEmail("admin@moreyu.me");
+      setPassword("luca@2026");
       setShowDefaultCredentials(true);
       setAdminExists(true);
       setError("默认管理员账号已创建，请使用以下凭据登录");

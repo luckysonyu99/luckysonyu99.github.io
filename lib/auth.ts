@@ -116,8 +116,8 @@ export const checkAdminExists = async (): Promise<boolean> => {
   try {
     // 尝试登录来检查管理员是否存在
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'admin@luca.com',
-      password: 'luca2024',
+      email: 'admin@moreyu.me',
+      password: 'luca@2026',
     });
 
     if (data.user) {
@@ -135,7 +135,7 @@ export const checkAdminExists = async (): Promise<boolean> => {
 // 创建默认管理员
 export const createDefaultAdmin = async () => {
   try {
-    const result = await signUp('admin@luca.com', 'luca2024');
+    const result = await signUp('admin@moreyu.me', 'luca@2026');
     return result;
   } catch (error: any) {
     console.error('创建默认管理员失败:', error);
